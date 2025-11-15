@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { LayoutDashboard, Building2, DollarSign, Wrench, User, LogOut } from 'lucide-react';
+import { Building2, DollarSign, LogOut } from 'lucide-react';
 
 const AdminLayout: React.FC = () => {
     const { user, signOut } = useAuth();
@@ -13,10 +13,8 @@ const AdminLayout: React.FC = () => {
     };
 
     const navItems = [
-        { name: 'Dashboard', href: '/admin/dashboard', icon: Building2 },
+        { name: 'Apartamentos', href: '/admin/dashboard', icon: Building2 },
         { name: 'Financeiro', href: '/admin/finance', icon: DollarSign },
-        // { name: 'Reclamações', href: '/admin/complaints', icon: Wrench },
-        // { name: 'Perfil', href: '/admin/profile', icon: User },
     ];
 
     return (
@@ -26,7 +24,7 @@ const AdminLayout: React.FC = () => {
                     <div className="h-12 w-12 flex items-center justify-center rounded-full bg-hope-green-100 text-hope-green-600 font-bold text-2xl">
                         H
                     </div>
-                    <span className="ml-3 font-semibold text-xl text-slate-800">Hope</span>
+                    <span className="ml-3 font-semibold text-xl text-slate-800">Hope Admin</span>
                 </div>
                 <nav className="flex-1 px-4 py-6 space-y-2">
                     {navItems.map((item) => (
@@ -59,8 +57,9 @@ const AdminLayout: React.FC = () => {
             <main className="flex-1 overflow-y-auto">
                 <header className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-slate-200 p-6">
                     <h1 className="text-2xl font-bold text-slate-800">
-                        Olá, {user?.full_name?.split(' ')[0]} — bem vindo ao painel do Hope
+                        Olá, {user?.full_name?.split(' ')[0]}
                     </h1>
+                    <p className="text-slate-500">Bem-vindo ao painel de administração do Residencial Hope.</p>
                 </header>
                 <div className="p-6">
                     <Outlet />
