@@ -1,9 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Apartment } from '../../types';
+import { Apartment, RentStatus } from '../../types';
 import { supabase } from '../../services/supabase';
-import { DollarSign, Home, Mail, Phone, Calendar } from 'lucide-react';
+import { DollarSign, Home, Mail, Phone, Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
 import AvatarUploader from '../../components/tenant/AvatarUploader';
+
+// Componente para exibir o status atual (copiado do FinanceiroPage para consistência)
+const StatusBadge: React.FC<{ status: RentStatus }> = ({ status }) => {
+  if (!status) return null;
+
+  const statusMap = {
+    paid: { label: 'Pago', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+    pending: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
+    overdue: { label: 'Atrasado', color: 'bg-red-100 text-red-700', icon: XCircle },
+  };
+
+  const { label, color, icon: Icon } = statusMap[status];
+
+  return (
+    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${color}`}>
+      <Icon className="w-4 h-4 mr-2" />
+      {label}
+    </span>
+  );
+};
+
 
 const TenantDashboardPage: React.FC = () => {
   const { profile } = useAuth();
@@ -113,6 +134,18 @@ const TenantDashboardPage: React.FC = () => {
                         </div>
                     )}
                 </div>
+            </div>
+            
+            {/* Status do Aluguel */}
+            <div className="mt-6 pt-4 border-t border-slate-100">
+                <p className="text-sm text-slate-500 mb-2">Status do Pagamento</p>
+                {loadingApartment ? (
+                    <p className="text-slate-500">Verificando...</p>
+                ) : apartment?.rent_status ? (
+                    <StatusBadge status={apartment.rent_status} />
+                ) : (
+                    <p className="text-slate-500">Status não definido.</p>
+                )}
             </div>
           </div>
 
