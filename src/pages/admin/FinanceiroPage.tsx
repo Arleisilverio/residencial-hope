@@ -35,7 +35,8 @@ interface RentListItemProps {
 
 const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange }) => {
   const { number, tenant, monthly_rent, rent_status } = apartment;
-  const isOccupied = !!tenant;
+  // Na FinanceiroPage, agora só recebemos apartamentos ocupados, mas mantemos a verificação por segurança
+  const isOccupied = !!tenant; 
   const rentValue = monthly_rent || (number >= 1 && number <= 6 ? 1600 : 1800);
 
   const formatCurrency = (value: number) => {
@@ -44,6 +45,7 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange }
 
   // Define a classe de fundo com base no status (usando tom 100 para melhor contraste)
   const getBackgroundColorClass = (status: RentStatus) => {
+    // Se não estiver ocupado, retorna branco (embora não deva acontecer mais)
     if (!isOccupied) return 'bg-white hover:bg-slate-50';
     
     switch (status) {
@@ -77,6 +79,7 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange }
               <StatusBadge status={rent_status} />
             </div>
           ) : (
+            // Este bloco não deve ser alcançado, mas mantido como fallback
             <p className="text-sm text-red-500 italic mt-1">Vago</p>
           )}
         </div>
@@ -109,41 +112,34 @@ const FinanceiroPage: React.FC = () => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const totalUnits = 14; // Total fixo de unidades
 
   const fetchApartments = useCallback(async () => {
     setLoading(true);
     setError(null);
     
+    // 1. Buscar APENAS apartamentos ocupados
     const { data, error } = await supabase
       .from('apartments')
       .select('*, tenant:profiles(*)')
+      .not('tenant_id', 'is', null) // Filtra apenas onde há inquilino
       .order('number', { ascending: true });
 
     if (error) {
       console.error('Error fetching apartments:', error);
       setError('Não foi possível carregar os dados financeiros dos apartamentos.');
     } else {
-      const allApartments = Array.from({ length: 14 }, (_, i) => {
-          const aptNumber = i + 1;
-          const found = data.find(d => d.number === aptNumber);
-          // Usamos o valor do aluguel padrão se monthly_rent for null
-          const defaultRent = aptNumber >= 1 && aptNumber <= 6 ? 1600 : 1800;
-
-          return found ? { 
-            ...found, 
-            tenant: found.tenant || null,
-            monthly_rent: found.monthly_rent || defaultRent,
-            rent_status: found.rent_status || 'pending' // Define 'pending' como padrão se ocupado
-          } : { 
-            number: aptNumber, 
-            status: 'available', 
-            tenant_id: null, 
-            tenant: null, 
-            monthly_rent: defaultRent,
-            rent_status: null
+      // 2. Processar apenas os dados retornados (que já são ocupados)
+      const occupiedApartments = data.map(apt => {
+          const defaultRent = apt.number >= 1 && apt.number <= 6 ? 1600 : 1800;
+          return { 
+            ...apt, 
+            tenant: apt.tenant || null,
+            monthly_rent: apt.monthly_rent || defaultRent,
+            rent_status: apt.rent_status || 'pending'
           };
       });
-      setApartments(allApartments as Apartment[]);
+      setApartments(occupiedApartments as Apartment[]);
     }
     setLoading(false);
   }, []);
@@ -155,7 +151,7 @@ const FinanceiroPage: React.FC = () => {
   // Cálculo da soma dos aluguéis ocupados
   const totalOccupiedRent = useMemo(() => {
     return apartments.reduce((sum, apt) => {
-      if (apt.tenant_id && apt.monthly_rent) {
+      if (apt.monthly_rent) {
         return sum + apt.monthly_rent;
       }
       return sum;
@@ -179,8 +175,8 @@ const FinanceiroPage: React.FC = () => {
     return <div className="text-center p-10 text-red-600">{error}</div>;
   }
 
-  const occupiedCount = apartments.filter(a => a.tenant_id).length;
-  const availableCount = apartments.filter(a => !a.tenant_id).length;
+  const occupiedCount = apartments.length;
+  const availableCount = totalUnits - occupiedCount;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -209,13 +205,19 @@ const FinanceiroPage: React.FC = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-lg divide-y divide-slate-200">
-          {apartments.map((apt) => (
-            <RentListItem key={apt.number} apartment={apt} onStatusChange={fetchApartments} />
-          ))}
+          {occupiedCount === 0 ? (
+            <div className="p-6 text-center text-slate-500">
+              Nenhum apartamento alugado encontrado.
+            </div>
+          ) : (
+            apartments.map((apt) => (
+              <RentListItem key={apt.number} apartment={apt} onStatusChange={fetchApartments} />
+            ))
+          )}
         </div>
         
         <div className="mt-6 p-4 bg-slate-100 rounded-lg text-sm text-slate-600 grid grid-cols-3 gap-4">
-          <p>Total de Unidades: 14</p>
+          <p>Total de Unidades: {totalUnits}</p>
           <p>Unidades Ocupadas: {occupiedCount}</p>
           <p>Unidades Vagas: {availableCount}</p>
         </div>
