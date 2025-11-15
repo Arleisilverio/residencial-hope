@@ -11,28 +11,61 @@ const AdminDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddTenantDialogOpen, setIsAddTenantDialogOpen] = useState(false);
-  const [apartmentToAdd, setApartmentToAdd] = useState<number | null>(null); // Novo estado para o número do apartamento
+  const [apartmentToAdd, setApartmentToAdd] = useState<number | null>(null);
   const [editingApartment, setEditingApartment] = useState<Apartment | null>(null);
   const navigate = useNavigate();
 
   const fetchApartments = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    
+    // 1. Buscar dados dos apartamentos e inquilinos
+    const { data: aptData, error: aptError } = await supabase
       .from('apartments')
       .select('*, tenant:profiles(*)')
       .order('number', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching apartments:', error);
+    if (aptError) {
+      console.error('Error fetching apartments:', aptError);
       setError('Não foi possível carregar os dados dos apartamentos.');
-    } else {
-      const allApartments = Array.from({ length: 14 }, (_, i) => {
-          const aptNumber = i + 1;
-          const found = data.find(d => d.number === aptNumber);
-          return found || { number: aptNumber, status: 'available', tenant_id: null, tenant: null, monthly_rent: null, rent_status: null, next_due_date: null };
-      });
-      setApartments(allApartments as Apartment[]);
+      setLoading(false);
+      return;
     }
+
+    // 2. Buscar contagem de reclamações pendentes
+    const { data: complaintsData, error: complaintsError } = await supabase
+      .from('complaints')
+      .select('apartment_number, count', { count: 'exact' })
+      .eq('status', 'new');
+
+    if (complaintsError) {
+        console.warn('Error fetching pending complaints count:', complaintsError);
+        // Continuamos mesmo com erro, apenas sem a contagem
+    }
+
+    const pendingComplaintsMap = new Map<number, number>();
+    if (complaintsData) {
+        // Agrupar a contagem por apartment_number
+        complaintsData.forEach(c => {
+            if (c.apartment_number) {
+                pendingComplaintsMap.set(c.apartment_number, (pendingComplaintsMap.get(c.apartment_number) || 0) + 1);
+            }
+        });
+    }
+
+    // 3. Combinar dados
+    const allApartments = Array.from({ length: 14 }, (_, i) => {
+        const aptNumber = i + 1;
+        const found = aptData.find(d => d.number === aptNumber);
+        
+        const baseApartment = found || { number: aptNumber, status: 'available', tenant_id: null, tenant: null, monthly_rent: null, rent_status: null, next_due_date: null };
+        
+        return {
+            ...baseApartment,
+            pending_complaints_count: pendingComplaintsMap.get(aptNumber) || 0,
+        };
+    });
+
+    setApartments(allApartments as Apartment[]);
     setLoading(false);
   }, []);
 
@@ -90,7 +123,7 @@ const AdminDashboardPage: React.FC = () => {
                 apartment={apt}
                 onEdit={setEditingApartment}
                 onView={handleViewTenant}
-                onAddTenant={() => handleOpenAddTenant(apt.number)} // Passa o número do apartamento
+                onAddTenant={() => handleOpenAddTenant(apt.number)}
               />
             ))}
           </div>
@@ -101,7 +134,7 @@ const AdminDashboardPage: React.FC = () => {
         onClose={handleCloseAddTenant}
         onSuccess={handleTenantAdded}
         availableApartments={availableApartments}
-        preSelectedApartmentNumber={apartmentToAdd} // Passa o número pré-selecionado
+        preSelectedApartmentNumber={apartmentToAdd}
       />
       <EditTenantDialog
         isOpen={!!editingApartment}

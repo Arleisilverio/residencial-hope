@@ -19,4 +19,5 @@ export interface Apartment {
   monthly_rent: number | null;
   rent_status: RentStatus;
   next_due_date: string | null; // Adicionando a data de vencimento
+  pending_complaints_count?: number; // Novo campo para o administrador
 }

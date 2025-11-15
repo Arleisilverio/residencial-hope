@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Apartment } from '../../types';
-import { User, Mail, Phone, Calendar, DollarSign, Pencil, Eye, UserPlus } from 'lucide-react';
+import { User, Mail, Phone, Calendar, DollarSign, Pencil, Eye, UserPlus, AlertTriangle } from 'lucide-react';
 import ImageViewerDialog from '../common/ImageViewerDialog';
 
 interface ApartmentCardProps {
@@ -11,8 +11,10 @@ interface ApartmentCardProps {
 }
 
 const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView, onAddTenant }) => {
-  const { number, tenant } = apartment;
+  const { number, tenant, pending_complaints_count = 0 } = apartment;
   const [isImageOpen, setIsImageOpen] = useState(false);
+
+  const hasPendingComplaints = pending_complaints_count > 0;
 
   const getMonthlyRent = (aptNumber: number) => {
     return aptNumber >= 1 && aptNumber <= 6 ? 1600 : 1800;
@@ -44,6 +46,16 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
             Kit {String(number).padStart(2, '0')}
           </h3>
           <div className="flex items-center space-x-1">
+            {/* Ícone de Alerta de Reclamação */}
+            {hasPendingComplaints && (
+              <div 
+                className="p-2 text-red-600 bg-red-100 dark:bg-red-900/50 rounded-full transition-colors cursor-pointer"
+                title={`Há ${pending_complaints_count} reclamação(ões) pendente(s)`}
+              >
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+            )}
+
             {tenant ? (
               <>
                 <button
