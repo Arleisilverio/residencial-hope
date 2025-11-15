@@ -61,50 +61,68 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange, 
 
   const bgColorClass = getBackgroundColorClass(rent_status);
 
+  // Se não estiver ocupado, não renderiza (garantindo que só apareçam kits alugados)
+  if (!isOccupied) return null;
+
   return (
     <div className={`flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 last:border-b-0 transition-colors ${bgColorClass}`}>
+      
+      {/* Left Section: Apartment, Tenant, Status, Avatar */}
       <div className="flex items-center space-x-4 min-w-0 flex-1">
         <Home className="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+        
         <div className="flex-1 min-w-0">
           <p className="text-lg font-semibold text-slate-800 dark:text-slate-200">Kit {String(number).padStart(2, '0')}</p>
           
-          {isOccupied ? (
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mt-1">
-              <div className="flex items-center text-sm text-slate-600 dark:text-slate-400 truncate mb-1 sm:mb-0">
-                <User className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span className="text-slate-700 dark:text-slate-300 truncate">{tenant.full_name}</span>
-              </div>
-              <StatusBadge status={rent_status} />
+          <div className="flex items-center mt-1 space-x-3">
+            {/* Avatar */}
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-300 dark:bg-slate-600 flex items-center justify-center flex-shrink-0">
+              {tenant?.avatar_url ? (
+                <img 
+                  src={tenant.avatar_url} 
+                  alt={tenant.full_name || 'Avatar'} 
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                <User className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              )}
             </div>
-          ) : (
-            <p className="text-sm text-red-500 italic mt-1">Vago</p>
-          )}
+            
+            {/* Tenant Name and Status */}
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-slate-700 dark:text-slate-300 font-medium truncate">{tenant.full_name}</p>
+              <div className="mt-1">
+                <StatusBadge status={rent_status} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       
-      <div className="flex items-center space-x-4">
-        <div className="text-right flex-shrink-0">
-          <p className="text-sm text-slate-500 dark:text-slate-400">Aluguel Base</p>
+      {/* Right Section: Rent Value and Menu */}
+      <div className="flex items-center space-x-4 flex-shrink-0">
+        <div className="text-right">
+          <p className="text-sm text-slate-500 dark:text-slate-400">Aluguel</p>
           <div className="flex items-center justify-end text-lg font-bold text-green-700 dark:text-green-400">
             <DollarSign className="w-5 h-5 mr-1" />
             <span>{formatCurrency(rentValue)}</span>
           </div>
         </div>
 
-        {isOccupied && (
-          <RentStatusMenu 
-            apartmentNumber={number} 
-            currentStatus={rent_status} 
-            onStatusChange={onStatusChange} 
-            onLocalStatusChange={(newStatus) => {
-              if (newStatus === 'partial') {
-                onOpenPartialPayment(apartment);
-              } else {
-                onLocalStatusChange(number, newStatus);
-              }
-            }}
-          />
-        )}
+        <RentStatusMenu 
+          apartmentNumber={number} 
+          currentStatus={rent_status} 
+          onStatusChange={onStatusChange} 
+          onLocalStatusChange={(newStatus) => {
+            if (newStatus === 'partial') {
+              // Se for parcial, abre o diálogo
+              onOpenPartialPayment(apartment);
+            } else {
+              // Caso contrário, faz a atualização otimista local
+              onLocalStatusChange(number, newStatus);
+            }
+          }}
+        />
       </div>
     </div>
   );
@@ -123,6 +141,7 @@ const FinanceiroPage: React.FC = () => {
     setLoading(true);
     setError(null);
     
+    // Filtra apenas apartamentos ocupados (tenant_id não nulo)
     const { data, error } = await supabase
       .from('apartments')
       .select('*, tenant:profiles(*)')
@@ -139,7 +158,7 @@ const FinanceiroPage: React.FC = () => {
             ...apt, 
             tenant: apt.tenant || null,
             monthly_rent: apt.monthly_rent || defaultRent,
-            rent_status: apt.rent_status || 'pending'
+            rent_status: apt.rent_status || 'pending' // Mantém o fallback para 'pending' se o DB retornar null
           };
       });
       setApartments(occupiedApartments as Apartment[]);
@@ -190,7 +209,7 @@ const FinanceiroPage: React.FC = () => {
   if (loading) {
     return (
       <div className="p-8 text-center">
-        <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600 mb-4" />
+        <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600 dark:text-blue-400 mb-4" />
         <p className="text-slate-600 dark:text-slate-400">Carregando dados financeiros...</p>
       </div>
     );
