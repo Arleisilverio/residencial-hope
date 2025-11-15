@@ -52,6 +52,37 @@ const FinanceiroPage: React.FC = () => {
     fetchApartments();
   }, [fetchApartments]);
 
+  // Efeito para escutar atualizações em tempo real
+  useEffect(() => {
+    const channel = supabase
+      .channel('apartments-finance-changes')
+      .on(
+        'postgres_changes',
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'apartments' 
+        },
+        (payload) => {
+          const updatedApartment = payload.new as Apartment;
+          setApartments(prevApts => 
+            prevApts.map(apt => 
+              apt.number === updatedApartment.number 
+                // Atualiza o apartamento, mas preserva os dados do inquilino que já tínhamos
+                ? { ...apt, ...updatedApartment, tenant: apt.tenant } 
+                : apt
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    // Limpa a inscrição ao desmontar o componente
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   // Função para atualização otimista local
   const handleLocalStatusChange = useCallback((apartmentNumber: number, newStatus: RentStatus) => {
     setApartments(prevApts => 
