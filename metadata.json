@@ -1,0 +1,5 @@
+{
+  "name": "Condomínio Residencial Hope",
+  "description": "A comprehensive management system for tenants and administrators of the Hope Residential Condominium, built with React, TailwindCSS, and integrating with Supabase for data and authentication.",
+  "requestFramePermissions": []
+}
