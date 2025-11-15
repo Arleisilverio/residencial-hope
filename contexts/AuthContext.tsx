@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '../services/supabase';
 import { UserProfile, UserRole } from '../types';
 import { Session } from '@supabase/supabase-js';
+import { ADMIN_EMAIL } from '../constants';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -25,11 +26,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        const { data: profile } = await supabase
+        let { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single();
+        
+        // Se o perfil não existir, crie um. Isso torna o aplicativo mais resiliente.
+        if (!profile) {
+          const is_admin = session.user.email === ADMIN_EMAIL;
+          const newProfileData = {
+            id: session.user.id,
+            full_name: session.user.user_metadata.full_name || session.user.email?.split('@')[0],
+            phone: session.user.user_metadata.phone || '',
+            apartment_number: session.user.user_metadata.apartment_number || null,
+            role: is_admin ? 'admin' : 'tenant',
+          };
+
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert(newProfileData)
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('Error creating profile:', insertError);
+            setUser(null);
+            setRole(null);
+          } else {
+            profile = newProfile;
+          }
+        }
         
         setUser(profile as UserProfile | null);
         setRole((profile as UserProfile)?.role || 'tenant');
