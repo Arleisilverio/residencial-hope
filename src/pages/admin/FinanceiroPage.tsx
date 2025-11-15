@@ -4,7 +4,7 @@ import { Apartment, RentStatus } from '../../types';
 import { Home, User, DollarSign, Loader2, CheckCircle, Clock, XCircle, ArrowLeft, AlertTriangle } from 'lucide-react';
 import RentStatusMenu from '../../components/admin/RentStatusMenu';
 import { Link } from 'react-router-dom'; 
-import PartialPaymentDialog from '../../components/admin/PartialPaymentDialog'; // Importando o novo diálogo
+import PartialPaymentDialog from '../../components/admin/PartialPaymentDialog';
 
 // Componente para exibir o status atual
 const StatusBadge: React.FC<{ status: RentStatus }> = ({ status }) => {
@@ -33,7 +33,7 @@ interface RentListItemProps {
   apartment: Apartment;
   onStatusChange: () => void;
   onLocalStatusChange: (apartmentNumber: number, newStatus: RentStatus) => void;
-  onOpenPartialPayment: (apartment: Apartment) => void; // Nova prop
+  onOpenPartialPayment: (apartment: Apartment) => void;
 }
 
 const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange, onLocalStatusChange, onOpenPartialPayment }) => {
@@ -120,7 +120,7 @@ const FinanceiroPage: React.FC = () => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [partialPaymentApartment, setPartialPaymentApartment] = useState<Apartment | null>(null); // Estado para o diálogo
+  const [partialPaymentApartment, setPartialPaymentApartment] = useState<Apartment | null>(null);
   
   const totalUnits = 14; 
 
@@ -172,7 +172,7 @@ const FinanceiroPage: React.FC = () => {
 
   const handleClosePartialPayment = () => {
     setPartialPaymentApartment(null);
-    fetchApartments(); // Recarrega após fechar o diálogo (se houve sucesso)
+    fetchApartments();
   };
 
   // Cálculo da soma dos aluguéis ocupados
@@ -226,7 +226,7 @@ const FinanceiroPage: React.FC = () => {
           </h1>
           
           {/* Cards de Métricas */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             
             {/* Receita Potencial */}
             <div className="bg-white p-4 rounded-xl shadow-lg border-l-4 border-blue-600">
@@ -237,17 +237,7 @@ const FinanceiroPage: React.FC = () => {
                         {formatCurrency(totalOccupiedRent)}
                     </span>
                 </div>
-            </div>
-
-            {/* Unidades Ocupadas */}
-            <div className="bg-white p-4 rounded-xl shadow-lg border-l-4 border-slate-400">
-                <p className="text-sm text-slate-500 font-medium">Unidades Ocupadas</p>
-                <div className="flex items-center mt-1">
-                    <Home className="w-5 h-5 text-slate-600 mr-2" />
-                    <span className="text-xl font-extrabold text-slate-900">
-                        {occupiedCount} / {totalUnits}
-                    </span>
-                </div>
+                <p className="text-xs text-slate-500 mt-2">Baseado em {occupiedCount} unidades ocupadas.</p>
             </div>
 
             {/* Atrasados */}
@@ -259,6 +249,7 @@ const FinanceiroPage: React.FC = () => {
                         {overdueCount}
                     </span>
                 </div>
+                <p className="text-xs text-slate-500 mt-2">Unidades Vagas: {availableCount}</p>
             </div>
           </div>
 
@@ -280,11 +271,7 @@ const FinanceiroPage: React.FC = () => {
             )}
           </div>
           
-          <div className="mt-6 p-4 bg-slate-100 rounded-lg text-sm text-slate-600 grid grid-cols-3 gap-4">
-            <p>Total de Unidades: {totalUnits}</p>
-            <p>Unidades Ocupadas: {occupiedCount}</p>
-            <p>Unidades Vagas: {availableCount}</p>
-          </div>
+          {/* Removendo o rodapé redundante, pois as informações de contagem estão nos cards */}
         </div>
       </div>
       
