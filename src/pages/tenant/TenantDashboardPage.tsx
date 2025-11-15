@@ -11,11 +11,16 @@ const StatusBadge: React.FC<{ status: RentStatus }> = ({ status }) => {
 
   const statusMap = {
     paid: { label: 'Pago', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+    partial: { label: 'Pag. Parcial', color: 'bg-pink-100 text-pink-700', icon: DollarSign },
     pending: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
     overdue: { label: 'Atrasado', color: 'bg-red-100 text-red-700', icon: XCircle },
   };
 
-  const { label, color, icon: Icon } = statusMap[status];
+  const statusData = statusMap[status];
+
+  if (!statusData) return null;
+
+  const { label, color, icon: Icon } = statusData;
 
   return (
     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${color}`}>
@@ -141,10 +146,8 @@ const TenantDashboardPage: React.FC = () => {
                 <p className="text-sm text-slate-500 mb-2">Status do Pagamento</p>
                 {loadingApartment ? (
                     <p className="text-slate-500">Verificando...</p>
-                ) : apartment?.rent_status ? (
-                    <StatusBadge status={apartment.rent_status} />
                 ) : (
-                    <p className="text-slate-500">Status não definido.</p>
+                    <StatusBadge status={apartment?.rent_status} />
                 )}
             </div>
           </div>
