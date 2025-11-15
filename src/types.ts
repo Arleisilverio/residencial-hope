@@ -9,7 +9,7 @@ export interface Profile {
   apartment_number: number | null; // Adicionando o número do apartamento
 }
 
-export type RentStatus = 'paid' | 'pending' | 'overdue' | null;
+export type RentStatus = 'paid' | 'pending' | 'overdue' | 'partial' | null;
 
 export interface Apartment {
   number: number;

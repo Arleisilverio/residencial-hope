@@ -11,11 +11,13 @@ const StatusBadge: React.FC<{ status: RentStatus }> = ({ status }) => {
 
   const statusMap = {
     paid: { label: 'Pago', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+    partial: { label: 'Pag. Parcial', color: 'bg-pink-100 text-pink-700', icon: DollarSign }, // Novo status
     pending: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
     overdue: { label: 'Atrasado', color: 'bg-red-100 text-red-700', icon: XCircle },
   };
 
-  const { label, color, icon: Icon } = statusMap[status];
+  const statusData = statusMap[status] || { label: 'Desconhecido', color: 'bg-slate-100 text-slate-700', icon: Clock };
+  const { label, color, icon: Icon } = statusData;
 
   return (
     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${color}`}>
