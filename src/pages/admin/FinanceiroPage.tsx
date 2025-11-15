@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '../../services/supabase';
 import { Apartment, RentStatus } from '../../types';
-import { Home, User, DollarSign, Loader2, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Home, User, DollarSign, Loader2, CheckCircle, Clock, XCircle, ArrowLeft } from 'lucide-react';
 import RentStatusMenu from '../../components/admin/RentStatusMenu';
+import { Link } from 'react-router-dom'; // Importando Link
 
 // Componente para exibir o status atual
 const StatusBadge: React.FC<{ status: RentStatus }> = ({ status }) => {
@@ -162,6 +163,13 @@ const FinanceiroPage: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <Link to="/admin/dashboard" className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar ao Painel
+          </Link>
+        </div>
+        
         <h1 className="text-3xl font-bold text-slate-900 mb-6">
           Gerenciamento de Aluguéis
         </h1>
