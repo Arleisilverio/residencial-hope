@@ -120,7 +120,7 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
             aria-label="Nova senha gerada"
           />
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-2">
-            <button type="button" onClick={generateRandomPassword} title="Gerar nova senha" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-100">
+            <button type="button" onClick={() => generateRandomPassword()} title="Gerar nova senha" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-100">
               <RefreshCw className="w-4 h-4" />
             </button>
             <button type="button" onClick={handleCopyPassword} title="Copiar senha" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-100" disabled={!newPassword}>
