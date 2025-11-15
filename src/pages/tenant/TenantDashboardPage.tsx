@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Apartment } from '../../types';
 import { supabase } from '../../services/supabase';
-import { DollarSign, Home } from 'lucide-react';
+import { DollarSign, Home, Mail, Phone, Calendar } from 'lucide-react';
+import AvatarUploader from '../../components/tenant/AvatarUploader';
 
 const TenantDashboardPage: React.FC = () => {
   const { profile } = useAuth();
@@ -38,41 +39,90 @@ const TenantDashboardPage: React.FC = () => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'Não informado';
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  if (!profile) {
+    return <div className="p-8 text-center text-slate-600">Carregando perfil...</div>;
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-slate-900 mb-6">
-        Bem-vindo, {profile?.full_name?.split(' ')[0] || 'Inquilino'}!
+      <h1 className="text-3xl font-bold text-slate-900 mb-8">
+        Bem-vindo, {profile.full_name?.split(' ')[0] || 'Inquilino'}!
       </h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Card de Informações do Apartamento */}
-        <div className="bg-white p-6 rounded-lg shadow-md col-span-1">
-          <h2 className="text-xl font-semibold text-slate-800 mb-4 flex items-center">
-            <Home className="w-5 h-5 mr-2 text-slate-500" />
-            Seu Apartamento
-          </h2>
-          <p className="text-4xl font-bold text-slate-900 mb-4">
-            Kit {String(profile?.apartment_number || 'N/A').padStart(2, '0')}
-          </p>
-          
-          {loadingApartment ? (
-            <p className="text-slate-500">Carregando detalhes...</p>
-          ) : (
-            <div className="flex items-center text-sm p-3 bg-green-50 rounded-md border border-green-200">
-              <DollarSign className="w-4 h-4 mr-3 text-green-600" />
-              <span className="text-green-700 font-semibold">
-                Aluguel Mensal: {formatCurrency(apartment?.monthly_rent)}
-              </span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Coluna 1: Perfil e Contato */}
+        <div className="lg:col-span-1">
+          <div className="bg-white p-6 rounded-xl shadow-lg">
+            <h2 className="text-xl font-semibold text-slate-800 mb-6 border-b pb-3">Meu Perfil</h2>
+            
+            <AvatarUploader profile={profile} />
+
+            <div className="text-center mb-6">
+              <p className="text-2xl font-bold text-slate-900">{profile.full_name}</p>
+              <p className="text-sm text-slate-500 capitalize">{profile.role}</p>
             </div>
-          )}
+
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center text-slate-700 p-2 bg-slate-50 rounded-md">
+                <Mail className="w-4 h-4 mr-3 text-slate-500" />
+                <span>{profile.email || 'Email não informado'}</span>
+              </div>
+              <div className="flex items-center text-slate-700 p-2 bg-slate-50 rounded-md">
+                <Phone className="w-4 h-4 mr-3 text-slate-500" />
+                <span>{profile.phone || 'Telefone não informado'}</span>
+              </div>
+              <div className="flex items-center text-slate-700 p-2 bg-slate-50 rounded-md">
+                <Calendar className="w-4 h-4 mr-3 text-slate-500" />
+                <span>Entrada: {formatDate(profile.move_in_date)}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Outros cards futuros */}
-        <div className="bg-white p-6 rounded-lg shadow-md col-span-2">
-          <h2 className="text-xl font-semibold text-slate-800 mb-4">Avisos e Pagamentos</h2>
-          <p className="text-slate-600">
-            Aqui você poderá gerenciar seus pagamentos e reservas.
-          </p>
+        {/* Coluna 2 & 3: Informações do Apartamento e Ações */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Card de Informações do Apartamento */}
+          <div className="bg-white p-6 rounded-xl shadow-lg">
+            <h2 className="text-xl font-semibold text-slate-800 mb-4 flex items-center border-b pb-3">
+              <Home className="w-5 h-5 mr-2 text-slate-500" />
+              Detalhes da Unidade
+            </h2>
+            
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <p className="text-sm text-slate-500">Número do Kit</p>
+                    <p className="text-3xl font-bold text-slate-900">
+                        {String(profile.apartment_number || 'N/A').padStart(2, '0')}
+                    </p>
+                </div>
+                <div>
+                    <p className="text-sm text-slate-500">Aluguel Mensal</p>
+                    {loadingApartment ? (
+                        <p className="text-lg text-slate-500">Carregando...</p>
+                    ) : (
+                        <div className="flex items-center text-xl font-bold text-green-700">
+                            <DollarSign className="w-5 h-5 mr-2" />
+                            <span>{formatCurrency(apartment?.monthly_rent)}</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+          </div>
+
+          {/* Card de Ações/Avisos */}
+          <div className="bg-white p-6 rounded-xl shadow-lg">
+            <h2 className="text-xl font-semibold text-slate-800 mb-4">Avisos e Ações Rápidas</h2>
+            <p className="text-slate-600">
+              Aqui você poderá gerenciar seus pagamentos e reservas.
+            </p>
+          </div>
         </div>
       </div>
     </div>

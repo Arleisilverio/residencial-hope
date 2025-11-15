@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
 import { supabase } from '../services/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { Profile } from '../types';
@@ -6,9 +6,10 @@ import { Profile } from '../types';
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  profile: Profile | null; // Adicionando o perfil
+  profile: Profile | null;
   signOut: () => Promise<void>;
   loading: boolean;
+  fetchProfile: (userId: string) => Promise<void>; // Expondo fetchProfile
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,7 +20,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -32,7 +33,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } else {
       setProfile(data as Profile);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const handleAuthStateChange = async (session: Session | null) => {
@@ -60,7 +61,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchProfile]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -72,6 +73,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     profile,
     signOut,
     loading,
+    fetchProfile,
   };
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
