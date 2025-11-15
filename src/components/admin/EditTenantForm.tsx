@@ -92,17 +92,17 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
-        <Input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+        <label htmlFor="editFullName" className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
+        <Input id="editFullName" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Ex: João da Silva" required />
       </div>
       <div>
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
-        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled />
+        <label htmlFor="editEmail" className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
+        <Input id="editEmail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled />
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">O email não pode ser alterado.</p>
       </div>
       <div>
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Telefone</label>
-        <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+        <label htmlFor="editPhone" className="text-sm font-medium text-slate-700 dark:text-slate-300">Telefone</label>
+        <Input id="editPhone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Ex: (11) 98765-4321" required />
       </div>
 
       {/* Seção de Redefinição de Senha */}
@@ -113,11 +113,13 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
         </p>
         <div className="relative flex items-center">
           <Input
+            id="newPassword"
             type="text"
             value={newPassword}
             readOnly
             placeholder="Clique em 'Gerar' para criar uma nova senha"
             className="pr-20 bg-slate-50 dark:bg-slate-900/50"
+            aria-label="Nova senha gerada"
           />
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-2">
             <button type="button" onClick={generateRandomPassword} title="Gerar nova senha" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-100">

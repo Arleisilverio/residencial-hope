@@ -114,21 +114,22 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
-        <Input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+        <label htmlFor="fullName" className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
+        <Input id="fullName" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Ex: João da Silva" required />
       </div>
       <div>
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
-        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
+        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Ex: joao.silva@email.com" required />
       </div>
       <div>
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Telefone</label>
-        <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+        <label htmlFor="phone" className="text-sm font-medium text-slate-700 dark:text-slate-300">Telefone</label>
+        <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Ex: (11) 98765-4321" required />
       </div>
       <div>
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Senha Provisória</label>
+        <label htmlFor="tempPassword" className="text-sm font-medium text-slate-700 dark:text-slate-300">Senha Provisória</label>
         <div className="relative flex items-center">
           <Input
+            id="tempPassword"
             type="text"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -147,8 +148,9 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Apartamento</label>
+          <label htmlFor="apartmentNumber" className="text-sm font-medium text-slate-700 dark:text-slate-300">Apartamento</label>
           <select
+            id="apartmentNumber"
             value={apartmentNumber}
             onChange={(e) => setApartmentNumber(Number(e.target.value))}
             className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
