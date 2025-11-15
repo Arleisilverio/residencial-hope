@@ -46,21 +46,22 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange }
         <Home className="w-6 h-6 text-blue-600 flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-lg font-semibold text-slate-800">Kit {String(number).padStart(2, '0')}</p>
-          <div className="flex items-center text-sm text-slate-600 mt-1 truncate">
-            <User className="w-4 h-4 mr-2 flex-shrink-0" />
-            <span className={isOccupied ? 'text-slate-700 truncate' : 'text-red-500 italic'}>
-              {isOccupied ? tenant.full_name : 'Vago'}
-            </span>
-          </div>
+          
+          {isOccupied ? (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mt-1">
+              <div className="flex items-center text-sm text-slate-600 truncate mb-1 sm:mb-0">
+                <User className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="text-slate-700 truncate">{tenant.full_name}</span>
+              </div>
+              <StatusBadge status={rent_status} />
+            </div>
+          ) : (
+            <p className="text-sm text-red-500 italic mt-1">Vago</p>
+          )}
         </div>
       </div>
       
       <div className="flex items-center space-x-4">
-        {isOccupied && (
-          <div className="flex-shrink-0"> {/* Removida a classe 'hidden sm:block' */}
-            <StatusBadge status={rent_status} />
-          </div>
-        )}
         
         <div className="text-right flex-shrink-0">
           <p className="text-sm text-slate-500">Aluguel Base</p>
