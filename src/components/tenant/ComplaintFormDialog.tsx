@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { Dialog } from '../ui/Dialog';
 import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
 import { Textarea } from '../ui/Textarea';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import toast from 'react-hot-toast';
 import { Wrench } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/Select';
 
 interface ComplaintFormDialogProps {
   isOpen: boolean;
@@ -77,19 +83,18 @@ const ComplaintFormDialog: React.FC<ComplaintFormDialogProps> = ({ isOpen, onClo
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="category" className="text-sm font-medium text-slate-700 dark:text-slate-300">Categoria do Reparo</label>
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 mt-1"
-            required
-          >
-            {categories.map(cat => (
-              <option key={cat.value} value={cat.value}>
-                {cat.label}
-              </option>
-            ))}
-          </select>
+          <Select value={category} onValueChange={setCategory} required>
+            <SelectTrigger id="category" className="w-full mt-1">
+              <SelectValue placeholder="Selecione uma categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(cat => (
+                <SelectItem key={cat.value} value={cat.value}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         
         <div>

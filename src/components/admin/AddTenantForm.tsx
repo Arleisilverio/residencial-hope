@@ -10,6 +10,13 @@ import { Popover, PopoverTrigger, PopoverContent } from '../ui/Popover';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn, formatPhoneNumber, formatFullName, formatEmail } from '../../lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/Select';
 
 interface AddTenantFormProps {
   availableApartments: Apartment[];
@@ -145,26 +152,28 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="apartmentNumber" className="text-sm font-medium text-slate-700 dark:text-slate-300">Apartamento</label>
-          <select
-            id="apartmentNumber"
-            value={apartmentNumber}
-            onChange={(e) => setApartmentNumber(Number(e.target.value))}
-            className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
+          <Select
+            value={apartmentNumber ? String(apartmentNumber) : ''}
+            onValueChange={(value) => setApartmentNumber(Number(value))}
             required
             disabled={isApartmentSelectionDisabled}
           >
-            <option value="" disabled>Selecione...</option>
-            {availableApartments.map(apt => (
-              <option key={apt.number} value={apt.number}>
-                Kit {String(apt.number).padStart(2, '0')}
-              </option>
-            ))}
-            {isApartmentSelectionDisabled && !availableApartments.find(apt => apt.number === preSelectedApartmentNumber) && (
-                <option key={preSelectedApartmentNumber} value={preSelectedApartmentNumber}>
-                    Kit {String(preSelectedApartmentNumber).padStart(2, '0')} (Selecionado)
-                </option>
-            )}
-          </select>
+            <SelectTrigger id="apartmentNumber" className="w-full">
+              <SelectValue placeholder="Selecione..." />
+            </SelectTrigger>
+            <SelectContent>
+              {availableApartments.map(apt => (
+                <SelectItem key={apt.number} value={String(apt.number)}>
+                  Kit {String(apt.number).padStart(2, '0')}
+                </SelectItem>
+              ))}
+              {isApartmentSelectionDisabled && !availableApartments.find(apt => apt.number === preSelectedApartmentNumber) && preSelectedApartmentNumber && (
+                  <SelectItem key={preSelectedApartmentNumber} value={String(preSelectedApartmentNumber)}>
+                      Kit {String(preSelectedApartmentNumber).padStart(2, '0')} (Selecionado)
+                  </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
           {isApartmentSelectionDisabled && (
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Apartamento pré-selecionado.</p>
           )}
