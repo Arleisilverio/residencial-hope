@@ -11,7 +11,7 @@ const StatusBadge: React.FC<{ status: RentStatus }> = ({ status }) => {
 
   const statusMap = {
     paid: { label: 'Pago', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-    partial: { label: 'Pag. Parcial', color: 'bg-pink-100 text-pink-700', icon: DollarSign }, // Novo status
+    partial: { label: 'Pag. Parcial', color: 'bg-pink-100 text-pink-700', icon: DollarSign },
     pending: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
     overdue: { label: 'Atrasado', color: 'bg-red-100 text-red-700', icon: XCircle },
   };
@@ -42,8 +42,27 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange }
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
+  // Define a classe de fundo com base no status
+  const getBackgroundColorClass = (status: RentStatus) => {
+    if (!isOccupied) return 'bg-white hover:bg-slate-50';
+    
+    switch (status) {
+      case 'paid':
+        return 'bg-green-50 hover:bg-green-100';
+      case 'partial':
+        return 'bg-pink-50 hover:bg-pink-100';
+      case 'overdue':
+        return 'bg-red-50 hover:bg-red-100';
+      case 'pending':
+      default:
+        return 'bg-yellow-50 hover:bg-yellow-100';
+    }
+  };
+
+  const bgColorClass = getBackgroundColorClass(rent_status);
+
   return (
-    <div className="flex items-center justify-between p-4 border-b last:border-b-0 hover:bg-slate-50 transition-colors">
+    <div className={`flex items-center justify-between p-4 border-b last:border-b-0 transition-colors ${bgColorClass}`}>
       <div className="flex items-center space-x-4 min-w-0 flex-1">
         <Home className="w-6 h-6 text-blue-600 flex-shrink-0" />
         <div className="flex-1 min-w-0">
@@ -55,6 +74,7 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange }
                 <User className="w-4 h-4 mr-2 flex-shrink-0" />
                 <span className="text-slate-700 truncate">{tenant.full_name}</span>
               </div>
+              {/* Mantemos o StatusBadge para o texto detalhado, mas o fundo do item já dá o feedback de cor */}
               <StatusBadge status={rent_status} />
             </div>
           ) : (
