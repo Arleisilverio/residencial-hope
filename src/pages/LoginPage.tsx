@@ -36,21 +36,33 @@ const LoginPage: React.FC = () => {
           localization={{
             variables: {
               sign_in: {
-                email_label: 'Seu email',
+                email_label: 'Endereço de e-mail',
                 password_label: 'Sua senha',
                 email_input_placeholder: 'seu.email@exemplo.com',
                 password_input_placeholder: 'Sua senha',
                 button_label: 'Entrar',
                 loading_button_label: 'Entrando...',
                 social_provider_text: 'Entrar com {{provider}}',
+                link_text: 'Não tem uma conta? Cadastre-se',
+              },
+              sign_up: {
+                email_label: 'Endereço de e-mail',
+                password_label: 'Crie uma senha',
+                email_input_placeholder: 'seu.email@exemplo.com',
+                password_input_placeholder: 'Crie uma senha forte',
+                button_label: 'Cadastrar',
+                loading_button_label: 'Cadastrando...',
                 link_text: 'Já tem uma conta? Entre',
+                confirmation_text: 'Verifique seu e-mail para o link de confirmação',
               },
               forgotten_password: {
-                email_label: 'Seu email',
+                email_label: 'Endereço de e-mail',
+                password_label: 'Sua senha',
                 email_input_placeholder: 'seu.email@exemplo.com',
                 button_label: 'Enviar instruções',
                 loading_button_label: 'Enviando...',
                 link_text: 'Esqueceu sua senha?',
+                confirmation_text: 'Verifique seu e-mail para o link de recuperação',
               },
               update_password: {
                 password_label: 'Nova senha',
