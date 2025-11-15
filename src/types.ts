@@ -17,5 +17,6 @@ export interface Apartment {
   tenant_id: string | null;
   tenant: Profile | null;
   monthly_rent: number | null;
-  rent_status: RentStatus; // Adicionando o status do aluguel
+  rent_status: RentStatus;
+  next_due_date: string | null; // Adicionando a data de vencimento
 }
