@@ -1,5 +1,5 @@
 @import 'tailwindcss';
 
 body {
-  background-color: #f1f5f9; /* slate-100 */
+  @apply bg-slate-100 dark:bg-slate-900 transition-colors duration-200;
 }

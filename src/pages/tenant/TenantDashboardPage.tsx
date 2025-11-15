@@ -10,10 +10,10 @@ const StatusBadge: React.FC<{ status: RentStatus }> = ({ status }) => {
   if (!status) return null;
 
   const statusMap = {
-    paid: { label: 'Pago', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-    partial: { label: 'Pag. Parcial', color: 'bg-pink-100 text-pink-700', icon: DollarSign },
-    pending: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
-    overdue: { label: 'Atrasado', color: 'bg-red-100 text-red-700', icon: XCircle },
+    paid: { label: 'Pago', color: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300', icon: CheckCircle },
+    partial: { label: 'Pag. Parcial', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/50 dark:text-pink-300', icon: DollarSign },
+    pending: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300', icon: Clock },
+    overdue: { label: 'Atrasado', color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', icon: XCircle },
   };
 
   const statusData = statusMap[status];
@@ -99,12 +99,12 @@ const TenantDashboardPage: React.FC = () => {
   };
 
   if (!profile) {
-    return <div className="p-8 text-center text-slate-600">Carregando perfil...</div>;
+    return <div className="p-8 text-center text-slate-600 dark:text-slate-400">Carregando perfil...</div>;
   }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-slate-900 mb-8">
+      <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-8">
         Bem-vindo, {profile.full_name?.split(' ')[0] || 'Inquilino'}!
       </h1>
       
@@ -112,27 +112,27 @@ const TenantDashboardPage: React.FC = () => {
         
         {/* Coluna 1: Perfil e Contato */}
         <div className="lg:col-span-1">
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h2 className="text-xl font-semibold text-slate-800 mb-6 border-b pb-3">Meu Perfil</h2>
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-6 border-b dark:border-slate-700 pb-3">Meu Perfil</h2>
             
             <AvatarUploader profile={profile} />
 
             <div className="text-center mb-6">
-              <p className="text-2xl font-bold text-slate-900">{profile.full_name}</p>
-              <p className="text-sm text-slate-500 capitalize">{profile.role}</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{profile.full_name}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 capitalize">{profile.role}</p>
             </div>
 
             <div className="space-y-3 text-sm">
-              <div className="flex items-center text-slate-700 p-2 bg-slate-50 rounded-md">
-                <Mail className="w-4 h-4 mr-3 text-slate-500" />
+              <div className="flex items-center text-slate-700 dark:text-slate-300 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-md">
+                <Mail className="w-4 h-4 mr-3 text-slate-500 dark:text-slate-400" />
                 <span>{profile.email || 'Email não informado'}</span>
               </div>
-              <div className="flex items-center text-slate-700 p-2 bg-slate-50 rounded-md">
-                <Phone className="w-4 h-4 mr-3 text-slate-500" />
+              <div className="flex items-center text-slate-700 dark:text-slate-300 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-md">
+                <Phone className="w-4 h-4 mr-3 text-slate-500 dark:text-slate-400" />
                 <span>{profile.phone || 'Telefone não informado'}</span>
               </div>
-              <div className="flex items-center text-slate-700 p-2 bg-slate-50 rounded-md">
-                <Calendar className="w-4 h-4 mr-3 text-slate-500" />
+              <div className="flex items-center text-slate-700 dark:text-slate-300 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-md">
+                <Calendar className="w-4 h-4 mr-3 text-slate-500 dark:text-slate-400" />
                 <span>Entrada: {formatDate(profile.move_in_date)}</span>
               </div>
             </div>
@@ -143,25 +143,25 @@ const TenantDashboardPage: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Card de Informações do Apartamento */}
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h2 className="text-xl font-semibold text-slate-800 mb-4 flex items-center border-b pb-3">
-              <Home className="w-5 h-5 mr-2 text-slate-500" />
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center border-b dark:border-slate-700 pb-3">
+              <Home className="w-5 h-5 mr-2 text-slate-500 dark:text-slate-400" />
               Detalhes da Unidade
             </h2>
             
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <p className="text-sm text-slate-500">Número do Kit</p>
-                    <p className="text-3xl font-bold text-slate-900">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Número do Kit</p>
+                    <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">
                         {String(profile.apartment_number || 'N/A').padStart(2, '0')}
                     </p>
                 </div>
                 <div>
-                    <p className="text-sm text-slate-500">Aluguel Mensal</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Aluguel Mensal</p>
                     {loadingApartment ? (
-                        <p className="text-lg text-slate-500">Carregando...</p>
+                        <p className="text-lg text-slate-500 dark:text-slate-400">Carregando...</p>
                     ) : (
-                        <div className="flex items-center text-xl font-bold text-green-700">
+                        <div className="flex items-center text-xl font-bold text-green-700 dark:text-green-400">
                             <DollarSign className="w-5 h-5 mr-2" />
                             <span>{formatCurrency(apartment?.monthly_rent)}</span>
                         </div>
@@ -170,10 +170,10 @@ const TenantDashboardPage: React.FC = () => {
             </div>
             
             {/* Status do Aluguel */}
-            <div className="mt-6 pt-4 border-t border-slate-100">
-                <p className="text-sm text-slate-500 mb-2">Status do Pagamento</p>
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Status do Pagamento</p>
                 {loadingApartment ? (
-                    <p className="text-slate-500">Verificando...</p>
+                    <p className="text-slate-500 dark:text-slate-400">Verificando...</p>
                 ) : (
                     <StatusBadge status={apartment?.rent_status} />
                 )}
@@ -181,9 +181,9 @@ const TenantDashboardPage: React.FC = () => {
           </div>
 
           {/* Card de Ações/Avisos */}
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h2 className="text-xl font-semibold text-slate-800 mb-4">Avisos e Ações Rápidas</h2>
-            <p className="text-slate-600">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-4">Avisos e Ações Rápidas</h2>
+            <p className="text-slate-600 dark:text-slate-400">
               Aqui você poderá gerenciar seus pagamentos e reservas.
             </p>
           </div>

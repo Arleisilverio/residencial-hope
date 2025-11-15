@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { LogOut, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ThemeToggleButton from '../common/ThemeToggleButton';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -24,27 +25,30 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <header className="bg-white shadow-sm sticky top-0 z-10">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900">
+      <header className="bg-white dark:bg-slate-800 shadow-sm dark:shadow-black/20 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-slate-800">Condomínio Hope</h1>
+              <h1 className="text-xl font-bold text-slate-800 dark:text-slate-200">Condomínio Hope</h1>
             </div>
             <div className="flex items-center space-x-2">
               {/* Botão de Gerenciamento Financeiro */}
               <Link
                 to="/admin/financeiro"
-                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-full transition-colors"
+                className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
                 title="Gerenciamento Financeiro"
               >
                 <DollarSign className="w-5 h-5" />
               </Link>
               
+              {/* Botão de Tema */}
+              <ThemeToggleButton />
+
               {/* Botão de Sair */}
               <button
                 onClick={handleLogout}
-                className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
+                className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
                 title="Sair"
               >
                 <LogOut className="w-5 h-5" />

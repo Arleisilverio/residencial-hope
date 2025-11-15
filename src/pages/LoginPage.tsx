@@ -4,9 +4,11 @@ import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const LoginPage: React.FC = () => {
   const { session } = useAuth();
+  const { theme } = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,19 +18,20 @@ const LoginPage: React.FC = () => {
   }, [session, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+    <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-900">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-slate-800 rounded-lg shadow-md">
         <div>
-          <h2 className="text-center text-3xl font-extrabold text-slate-900">
+          <h2 className="text-center text-3xl font-extrabold text-slate-900 dark:text-slate-100">
             Condomínio Hope
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-600">
+          <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
             Faça login para acessar o painel
           </p>
         </div>
         <Auth
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
+          theme={theme}
           providers={[]}
           localization={{
             variables: {
