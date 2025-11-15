@@ -4,6 +4,7 @@ import { Apartment } from '../../types';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import toast from 'react-hot-toast';
+import { Copy, RefreshCw } from 'lucide-react';
 
 interface EditTenantFormProps {
   apartment: Apartment;
@@ -14,6 +15,7 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -21,8 +23,27 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
       setFullName(apartment.tenant.full_name || '');
       setEmail(apartment.tenant.email || '');
       setPhone(apartment.tenant.phone || '');
+      setNewPassword(''); // Limpa o campo de senha ao abrir o diálogo
     }
   }, [apartment]);
+
+  const generateRandomPassword = (length = 10) => {
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+    const array = new Uint32Array(length);
+    window.crypto.getRandomValues(array);
+    let generatedPassword = "";
+    for (let i = 0; i < length; i++) {
+      generatedPassword += charset[array[i] % charset.length];
+    }
+    setNewPassword(generatedPassword);
+  };
+
+  const handleCopyPassword = () => {
+    if (newPassword) {
+      navigator.clipboard.writeText(newPassword);
+      toast.success('Senha copiada para a área de transferência!');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,21 +55,38 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
     setLoading(true);
     const toastId = toast.loading('Atualizando dados...');
 
-    // Atualiza a tabela de perfis
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ full_name: fullName, phone: phone })
-      .eq('id', apartment.tenant.id);
+    try {
+      // 1. Atualiza a senha se uma nova foi gerada, chamando a função segura
+      if (newPassword) {
+        const { error: functionError } = await supabase.functions.invoke('reset-user-password', {
+          body: { userId: apartment.tenant.id, newPassword },
+        });
 
-    if (profileError) {
-      toast.error(`Erro ao atualizar perfil: ${profileError.message}`, { id: toastId });
+        if (functionError) {
+          throw new Error(`Falha ao redefinir senha: ${functionError.message}`);
+        }
+      }
+
+      // 2. Atualiza as informações do perfil (nome, telefone)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ full_name: fullName, phone: phone })
+        .eq('id', apartment.tenant.id);
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      toast.success('Dados do inquilino atualizados com sucesso!', { id: toastId });
+      onSuccess();
+
+    } catch (error) {
+      console.error('Update error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
+      toast.error(`Erro ao atualizar: ${errorMessage}`, { id: toastId });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    toast.success('Dados atualizados com sucesso!', { id: toastId });
-    onSuccess();
-    setLoading(false);
   };
 
   return (
@@ -66,6 +104,32 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Telefone</label>
         <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
       </div>
+
+      {/* Seção de Redefinição de Senha */}
+      <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">Redefinir Senha</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+          Gere uma nova senha temporária para o inquilino. Deixe em branco se não quiser alterar.
+        </p>
+        <div className="relative flex items-center">
+          <Input
+            type="text"
+            value={newPassword}
+            readOnly
+            placeholder="Clique em 'Gerar' para criar uma nova senha"
+            className="pr-20 bg-slate-50 dark:bg-slate-900/50"
+          />
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-2">
+            <button type="button" onClick={generateRandomPassword} title="Gerar nova senha" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-100">
+              <RefreshCw className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={handleCopyPassword} title="Copiar senha" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-100" disabled={!newPassword}>
+              <Copy className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={loading}>
           {loading ? 'Salvando...' : 'Salvar Alterações'}
