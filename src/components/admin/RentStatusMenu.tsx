@@ -11,6 +11,7 @@ interface RentStatusMenuProps {
   currentStatus: RentStatus;
   onStatusChange: () => void; // Recarga global
   onLocalStatusChange: (newStatus: RentStatus) => void; // Atualização otimista local
+  onOpenPartialPayment: () => void; // Novo prop para abrir o diálogo de pagamento parcial
 }
 
 const statusOptions: { value: RentStatus; label: string; icon: React.ElementType; color: string }[] = [
@@ -20,7 +21,7 @@ const statusOptions: { value: RentStatus; label: string; icon: React.ElementType
   { value: 'overdue', label: 'Atrasado', icon: XCircle, color: 'text-red-600 bg-red-100' },
 ];
 
-const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenantId, currentStatus, onStatusChange, onLocalStatusChange }) => {
+const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenantId, currentStatus, onStatusChange, onLocalStatusChange, onOpenPartialPayment }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -49,6 +50,13 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
       setIsMenuOpen(false);
       return;
     }
+    
+    if (newStatus === 'partial') {
+        // Se for parcial, abrimos o diálogo e a atualização do DB é feita lá.
+        setIsMenuOpen(false);
+        onOpenPartialPayment();
+        return;
+    }
 
     // 1. Atualização otimista local
     onLocalStatusChange(newStatus);
@@ -59,12 +67,20 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
 
     try {
         // 2. Atualização no banco de dados
-        const { error: updateError } = await supabase
-          .from('apartments')
-          .update({ 
+        const updatePayload: any = { 
             rent_status: newStatus,
             payment_request_pending: false // Limpa a flag de solicitação de pagamento
-          })
+        };
+
+        // Se o status não for 'partial', limpamos os campos de pagamento parcial
+        if (newStatus !== 'partial') {
+            updatePayload.amount_paid = null;
+            updatePayload.remaining_balance = null;
+        }
+
+        const { error: updateError } = await supabase
+          .from('apartments')
+          .update(updatePayload)
           .eq('number', apartmentNumber);
 
         if (updateError) {

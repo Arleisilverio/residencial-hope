@@ -8,10 +8,11 @@ interface RentListItemProps {
   apartment: Apartment;
   onStatusChange: () => void;
   onLocalStatusChange: (apartmentNumber: number, newStatus: RentStatus) => void;
+  onOpenPartialPayment: (apartment: Apartment) => void; // Novo prop
 }
 
-const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange, onLocalStatusChange }) => {
-  const { number, tenant, monthly_rent, rent_status, next_due_date } = apartment;
+const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange, onLocalStatusChange, onOpenPartialPayment }) => {
+  const { number, tenant, monthly_rent, rent_status, next_due_date, amount_paid, remaining_balance } = apartment;
   
   // Garantir que o tenant exista, pois estamos filtrando apenas ocupados
   if (!tenant) return null; 
@@ -19,7 +20,8 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange, 
   const rentValue = monthly_rent || (number >= 1 && number <= 6 ? 1600 : 1800);
   const currentStatus = rent_status || 'pending'; // Status inicial é 'pending' se for nulo no DB
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | null | undefined) => {
+    if (value === null || value === undefined) return 'N/A';
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
@@ -78,6 +80,15 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange, 
                     <span>Vencimento: {formatDate(next_due_date)}</span>
                 </div>
               </div>
+              
+              {/* Detalhes do Pagamento Parcial */}
+              {currentStatus === 'partial' && amount_paid !== null && remaining_balance !== null && (
+                <div className="mt-2 text-xs p-1 bg-pink-100 dark:bg-pink-900/50 rounded-md inline-block">
+                    <span className="text-pink-700 dark:text-pink-300 font-semibold">
+                        Pago: {formatCurrency(amount_paid)} | Falta: {formatCurrency(remaining_balance)}
+                    </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -99,6 +110,7 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange, 
           currentStatus={currentStatus} 
           onStatusChange={onStatusChange} 
           onLocalStatusChange={(newStatus) => onLocalStatusChange(number, newStatus)}
+          onOpenPartialPayment={() => onOpenPartialPayment(apartment)} // Passa a função
         />
       </div>
     </div>

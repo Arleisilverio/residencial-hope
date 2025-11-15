@@ -21,4 +21,6 @@ export interface Apartment {
   next_due_date: string | null; // Adicionando a data de vencimento
   pending_complaints_count?: number; // Novo campo para o administrador
   payment_request_pending: boolean; // Adicionando o status de solicitação de pagamento
+  amount_paid: number | null; // Novo campo para pagamento parcial
+  remaining_balance: number | null; // Novo campo para saldo restante
 }
