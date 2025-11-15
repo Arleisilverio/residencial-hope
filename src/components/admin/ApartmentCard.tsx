@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Apartment } from '../../types';
-import { User, Mail, Phone, Calendar, DollarSign, Pencil, Eye, UserPlus, AlertTriangle } from 'lucide-react';
+import { User, Mail, Phone, Calendar, DollarSign, Pencil, Eye, UserPlus, AlertTriangle, Bell } from 'lucide-react';
 import ImageViewerDialog from '../common/ImageViewerDialog';
 
 interface ApartmentCardProps {
@@ -11,7 +11,7 @@ interface ApartmentCardProps {
 }
 
 const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView, onAddTenant }) => {
-  const { number, tenant, pending_complaints_count = 0 } = apartment;
+  const { number, tenant, pending_complaints_count = 0, payment_request_pending } = apartment;
   const [isImageOpen, setIsImageOpen] = useState(false);
 
   const hasPendingComplaints = pending_complaints_count > 0;
@@ -20,7 +20,7 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
     return aptNumber >= 1 && aptNumber <= 6 ? 1600 : 1800;
   };
 
-  const monthly_rent = getMonthlyRent(number);
+  const monthly_rent = apartment.monthly_rent || getMonthlyRent(number);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Não informado';
@@ -89,6 +89,16 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
           <DollarSign className="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
           <span className="text-green-700 dark:text-green-300 font-semibold">Aluguel Mensal: {formatCurrency(monthly_rent)}</span>
         </div>
+
+        {/* ALERTA DE SOLICITAÇÃO DE PAGAMENTO */}
+        {tenant && payment_request_pending && (
+            <div className="flex items-center text-sm mb-4 p-3 bg-blue-100 dark:bg-blue-900/50 rounded-md border border-blue-300 dark:border-blue-700 animate-pulse">
+                <Bell className="w-4 h-4 mr-3 text-blue-700 dark:text-blue-300" />
+                <span className="text-blue-800 dark:text-blue-200 font-semibold">
+                    Solicitação de Pagamento Pendente!
+                </span>
+            </div>
+        )}
 
         {tenant ? (
           <div className="flex flex-col flex-grow">

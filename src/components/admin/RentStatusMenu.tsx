@@ -61,7 +61,10 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
         // 2. Atualização no banco de dados
         const { error: updateError } = await supabase
           .from('apartments')
-          .update({ rent_status: newStatus })
+          .update({ 
+            rent_status: newStatus,
+            payment_request_pending: false // Limpa a flag de solicitação de pagamento
+          })
           .eq('number', apartmentNumber);
 
         if (updateError) {

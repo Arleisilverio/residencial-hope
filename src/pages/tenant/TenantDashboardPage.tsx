@@ -6,13 +6,14 @@ import { DollarSign, Home, Mail, Phone, Calendar, Wrench, Bell } from 'lucide-re
 import AvatarUploader from '../../components/tenant/AvatarUploader';
 import StatusBadge from '../../components/common/StatusBadge'; 
 import { Button } from '../../components/ui/Button';
-import ComplaintFormDialog from '../../components/tenant/ComplaintFormDialog'; // Importando o novo componente
+import ComplaintFormDialog from '../../components/tenant/ComplaintFormDialog'; 
+import toast from 'react-hot-toast';
 
 const TenantDashboardPage: React.FC = () => {
   const { profile } = useAuth();
   const [apartment, setApartment] = useState<Apartment | null>(null);
   const [loadingApartment, setLoadingApartment] = useState(true);
-  const [isComplaintDialogOpen, setIsComplaintDialogOpen] = useState(false); // Novo estado
+  const [isComplaintDialogOpen, setIsComplaintDialogOpen] = useState(false); 
 
   const fetchApartmentDetails = useCallback(async () => {
     if (!profile?.apartment_number) {
@@ -34,6 +35,41 @@ const TenantDashboardPage: React.FC = () => {
     }
     setLoadingApartment(false);
   }, [profile]);
+
+  const handleRequestPayment = async () => {
+    if (!profile || !apartment) {
+      toast.error('Erro: Dados do apartamento não carregados.');
+      return;
+    }
+    if (apartment.payment_request_pending) {
+        toast('Você já enviou uma solicitação de pagamento. Aguarde a confirmação do administrador.', { icon: '⏳' });
+        return;
+    }
+
+    setLoadingApartment(true);
+    const toastId = toast.loading('Enviando solicitação de pagamento...');
+
+    try {
+        const { error } = await supabase
+            .from('apartments')
+            .update({ payment_request_pending: true })
+            .eq('number', apartment.number);
+
+        if (error) {
+            throw error;
+        }
+
+        // O Realtime listener deve atualizar o estado, mas fazemos um update otimista
+        setApartment(prev => prev ? { ...prev, payment_request_pending: true } : null);
+
+        toast.success('Solicitação de pagamento enviada ao administrador!', { id: toastId });
+    } catch (error) {
+        console.error('Error requesting payment:', error);
+        toast.error('Falha ao enviar a solicitação de pagamento.', { id: toastId });
+    } finally {
+        setLoadingApartment(false);
+    }
+  };
 
   // 1. Efeito para buscar dados iniciais
   useEffect(() => {
@@ -169,13 +205,33 @@ const TenantDashboardPage: React.FC = () => {
                       <StatusBadge status={apartment?.rent_status || 'pending'} />
                   )}
               </div>
+
+              {/* Botão de Pagar Aluguel */}
+              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
+                  <Button 
+                    onClick={handleRequestPayment} 
+                    disabled={loadingApartment || apartment?.payment_request_pending}
+                    className="w-full"
+                  >
+                    {apartment?.payment_request_pending ? (
+                        <>
+                            <Bell className="w-4 h-4 mr-2 animate-pulse" />
+                            Solicitação Enviada
+                        </>
+                    ) : (
+                        <>
+                            <DollarSign className="w-4 h-4 mr-2" />
+                            Pagar Aluguel
+                        </>
+                    )}
+                  </Button>
+              </div>
             </div>
 
             {/* Card de Ações/Avisos */}
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
               <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-4">Avisos e Ações Rápidas</h2>
               <div className="space-y-3">
-                {/* Ação de Reparo movida para o card de Perfil */}
                 <div className="flex items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-md text-slate-600 dark:text-slate-400">
                     <Bell className="w-4 h-4 mr-3" />
                     <p className="text-sm">Verifique suas notificações para atualizações.</p>
