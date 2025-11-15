@@ -74,7 +74,7 @@ const TenantDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 sm:p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <Link to="/admin/dashboard" className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900">
