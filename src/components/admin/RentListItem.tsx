@@ -1,6 +1,6 @@
 import React from 'react';
 import { Apartment, RentStatus } from '../../types';
-import { Home, User, DollarSign, Calendar } from 'lucide-react';
+import { Home, User, DollarSign, Calendar, Bell } from 'lucide-react';
 import RentStatusMenu from './RentStatusMenu';
 import StatusBadge from '../common/StatusBadge';
 
@@ -12,7 +12,7 @@ interface RentListItemProps {
 }
 
 const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange, onLocalStatusChange, onOpenPartialPayment }) => {
-  const { number, tenant, monthly_rent, rent_status, next_due_date, amount_paid, remaining_balance } = apartment;
+  const { number, tenant, monthly_rent, rent_status, next_due_date, amount_paid, remaining_balance, payment_request_pending } = apartment;
   
   // Garantir que o tenant exista, pois estamos filtrando apenas ocupados
   if (!tenant) return null; 
@@ -81,6 +81,16 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange, 
                 </div>
               </div>
               
+              {/* ALERTA DE SOLICITAÇÃO DE PAGAMENTO */}
+              {payment_request_pending && (
+                <div className="mt-2 flex items-center text-xs p-2 bg-blue-100 dark:bg-blue-900/50 rounded-md border border-blue-300 dark:border-blue-700 animate-pulse">
+                    <Bell className="w-3 h-3 mr-2 text-blue-700 dark:text-blue-300 flex-shrink-0" />
+                    <span className="text-blue-800 dark:text-blue-200 font-semibold">
+                        Solicitação de Pagamento
+                    </span>
+                </div>
+              )}
+
               {/* Detalhes do Pagamento Parcial */}
               {currentStatus === 'partial' && amount_paid !== null && remaining_balance !== null && (
                 <div className="mt-2 text-xs p-1 bg-pink-100 dark:bg-pink-900/50 rounded-md inline-block">
