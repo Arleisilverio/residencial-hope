@@ -2,22 +2,43 @@ import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import AdminDashboardPage from './src/pages/admin/AdminDashboardPage';
 import TenantDetailPage from './src/pages/admin/TenantDetailPage';
+import TenantDashboardPage from './src/pages/tenant/TenantDashboardPage';
 import LoginPage from './src/pages/LoginPage';
 import AdminLayout from './src/components/layouts/AdminLayout';
-import ProtectedRoute from './src/components/auth/ProtectedRoute';
+import TenantLayout from './src/components/layouts/TenantLayout';
+import RoleProtectedRoute from './src/components/auth/RoleProtectedRoute';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from './src/contexts/AuthContext';
 
 function App() {
-  const { session } = useAuth();
+  const { profile, loading } = useAuth();
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen bg-slate-100 text-slate-700">Carregando autenticação...</div>;
+  }
 
   const AdminRoutes = () => (
-    <ProtectedRoute>
+    <RoleProtectedRoute allowedRoles={['admin']} redirectTo={profile?.role === 'tenant' ? '/tenant/dashboard' : '/login'}>
       <AdminLayout>
         <Outlet />
       </AdminLayout>
-    </ProtectedRoute>
+    </RoleProtectedRoute>
   );
+
+  const TenantRoutes = () => (
+    <RoleProtectedRoute allowedRoles={['tenant']} redirectTo={profile?.role === 'admin' ? '/admin/dashboard' : '/login'}>
+      <TenantLayout>
+        <Outlet />
+      </TenantLayout>
+    </RoleProtectedRoute>
+  );
+
+  // Lógica de redirecionamento inicial
+  const initialRedirectPath = profile?.role === 'admin' 
+    ? "/admin/dashboard" 
+    : profile?.role === 'tenant' 
+    ? "/tenant/dashboard" 
+    : "/login";
 
   return (
     <>
@@ -25,14 +46,22 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         
+        {/* Rotas do Administrador */}
         <Route element={<AdminRoutes />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/tenant/:tenantId" element={<TenantDetailPage />} />
         </Route>
 
+        {/* Rotas do Inquilino */}
+        <Route element={<TenantRoutes />}>
+          <Route path="/tenant/dashboard" element={<TenantDashboardPage />} />
+          {/* Adicionar outras rotas do inquilino aqui */}
+        </Route>
+
+        {/* Rota raiz redireciona com base na role */}
         <Route 
           path="/" 
-          element={<Navigate to={session ? "/admin/dashboard" : "/login"} replace />} 
+          element={<Navigate to={initialRedirectPath} replace />} 
         />
       </Routes>
     </>

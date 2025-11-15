@@ -5,6 +5,7 @@ export interface Profile {
   phone: string;
   avatar_url: string;
   move_in_date: string;
+  role: 'admin' | 'tenant'; // Adicionando a role
 }
 
 export interface Apartment {
