@@ -9,12 +9,12 @@ import { Calendar } from '../ui/Calendar';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/Popover';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '../../lib/utils';
+import { cn, formatPhoneNumber, formatFullName, formatEmail } from '../../lib/utils';
 
 interface AddTenantFormProps {
   availableApartments: Apartment[];
   onSuccess: () => void;
-  preSelectedApartmentNumber: number | null; // Nova prop
+  preSelectedApartmentNumber: number | null;
 }
 
 const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSuccess, preSelectedApartmentNumber }) => {
@@ -26,7 +26,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
   const [moveInDate, setMoveInDate] = useState<Date | undefined>(new Date());
   const [loading, setLoading] = useState(false);
 
-  // Atualiza o estado do apartamento se a prop mudar (útil se o diálogo for reutilizado)
   useEffect(() => {
     if (preSelectedApartmentNumber) {
       setApartmentNumber(preSelectedApartmentNumber);
@@ -89,20 +88,17 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     }
 
     if (authData.user) {
-      // Tenta atualizar o aluguel
       const { error: updateError } = await supabase
         .from('apartments')
         .update({ monthly_rent: monthlyRent })
         .eq('number', apartmentNumber);
 
       if (updateError) {
-        // Se falhar, apenas avisa, mas o usuário já foi criado
         toast.error(`Usuário criado, mas falha ao atualizar aluguel: ${updateError.message}`, { id: toastId });
       } else {
         toast.success('Inquilino cadastrado com sucesso!', { id: toastId });
       }
       
-      // Chama onSuccess para fechar o diálogo e recarregar a lista
       onSuccess();
     }
     
@@ -115,15 +111,15 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label htmlFor="fullName" className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
-        <Input id="fullName" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Ex: João da Silva" required />
+        <Input id="fullName" type="text" value={fullName} onChange={(e) => setFullName(formatFullName(e.target.value))} placeholder="Ex: João da Silva" required />
       </div>
       <div>
         <label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
-        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Ex: joao.silva@email.com" required />
+        <Input id="email" type="email" value={email} onChange={(e) => setEmail(formatEmail(e.target.value))} placeholder="Ex: joao.silva@email.com" required />
       </div>
       <div>
         <label htmlFor="phone" className="text-sm font-medium text-slate-700 dark:text-slate-300">Telefone</label>
-        <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Ex: (11) 98765-4321" required />
+        <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(formatPhoneNumber(e.target.value))} maxLength={15} placeholder="Ex: (11) 98765-4321" required />
       </div>
       <div>
         <label htmlFor="tempPassword" className="text-sm font-medium text-slate-700 dark:text-slate-300">Senha Provisória</label>
@@ -155,7 +151,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
             onChange={(e) => setApartmentNumber(Number(e.target.value))}
             className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             required
-            disabled={isApartmentSelectionDisabled} // Desabilita se pré-selecionado
+            disabled={isApartmentSelectionDisabled}
           >
             <option value="" disabled>Selecione...</option>
             {availableApartments.map(apt => (
@@ -163,7 +159,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
                 Kit {String(apt.number).padStart(2, '0')}
               </option>
             ))}
-            {/* Se estiver pré-selecionado, garantimos que a opção correta esteja presente mesmo que não esteja na lista de 'available' (embora deva estar) */}
             {isApartmentSelectionDisabled && !availableApartments.find(apt => apt.number === preSelectedApartmentNumber) && (
                 <option key={preSelectedApartmentNumber} value={preSelectedApartmentNumber}>
                     Kit {String(preSelectedApartmentNumber).padStart(2, '0')} (Selecionado)

@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import toast from 'react-hot-toast';
 import { Copy, RefreshCw } from 'lucide-react';
+import { formatPhoneNumber, formatFullName } from '../../lib/utils';
 
 interface EditTenantFormProps {
   apartment: Apartment;
@@ -23,7 +24,7 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
       setFullName(apartment.tenant.full_name || '');
       setEmail(apartment.tenant.email || '');
       setPhone(apartment.tenant.phone || '');
-      setNewPassword(''); // Limpa o campo de senha ao abrir o diálogo
+      setNewPassword('');
     }
   }, [apartment]);
 
@@ -56,7 +57,6 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
     const toastId = toast.loading('Atualizando dados...');
 
     try {
-      // 1. Atualiza a senha se uma nova foi gerada, chamando a função segura
       if (newPassword) {
         const { error: functionError } = await supabase.functions.invoke('reset-user-password', {
           body: { userId: apartment.tenant.id, newPassword },
@@ -67,7 +67,6 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
         }
       }
 
-      // 2. Atualiza as informações do perfil (nome, telefone)
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ full_name: fullName, phone: phone })
@@ -93,7 +92,7 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label htmlFor="editFullName" className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
-        <Input id="editFullName" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Ex: João da Silva" required />
+        <Input id="editFullName" type="text" value={fullName} onChange={(e) => setFullName(formatFullName(e.target.value))} placeholder="Ex: João da Silva" required />
       </div>
       <div>
         <label htmlFor="editEmail" className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
@@ -102,10 +101,9 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
       </div>
       <div>
         <label htmlFor="editPhone" className="text-sm font-medium text-slate-700 dark:text-slate-300">Telefone</label>
-        <Input id="editPhone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Ex: (11) 98765-4321" required />
+        <Input id="editPhone" type="tel" value={phone} onChange={(e) => setPhone(formatPhoneNumber(e.target.value))} maxLength={15} placeholder="Ex: (11) 98765-4321" required />
       </div>
 
-      {/* Seção de Redefinição de Senha */}
       <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
         <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">Redefinir Senha</h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
