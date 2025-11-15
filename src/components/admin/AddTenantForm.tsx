@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
 import { Apartment } from '../../types';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import toast from 'react-hot-toast';
+import { Copy, RefreshCw } from 'lucide-react';
 
 interface AddTenantFormProps {
   availableApartments: Apartment[];
@@ -19,6 +20,30 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
   const [monthlyRent, setMonthlyRent] = useState<number | ''>('');
   const [loading, setLoading] = useState(false);
 
+  const generateRandomPassword = (length = 10) => {
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+    const array = new Uint32Array(length);
+    window.crypto.getRandomValues(array);
+    let newPassword = "";
+    for (let i = 0; i < length; i++) {
+      newPassword += charset[array[i] % charset.length];
+    }
+    return newPassword;
+  };
+
+  useEffect(() => {
+    setPassword(generateRandomPassword());
+  }, []);
+
+  const handleRegeneratePassword = () => {
+    setPassword(generateRandomPassword());
+  };
+
+  const handleCopyPassword = () => {
+    navigator.clipboard.writeText(password);
+    toast.success('Senha copiada para a área de transferência!');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName || !email || !phone || !password || !apartmentNumber || !monthlyRent) {
@@ -29,7 +54,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     setLoading(true);
     const toastId = toast.loading('Cadastrando inquilino...');
 
-    // 1. Criar o usuário na autenticação do Supabase
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -49,8 +73,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     }
 
     if (authData.user) {
-      // 2. O trigger 'handle_new_user' já associou o inquilino ao apartamento.
-      //    Agora, apenas atualizamos o valor do aluguel.
       const { error: updateError } = await supabase
         .from('apartments')
         .update({ monthly_rent: monthlyRent })
@@ -60,7 +82,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
         toast.error(`Usuário criado, mas falha ao atualizar aluguel: ${updateError.message}`, { id: toastId });
       } else {
         toast.success('Inquilino cadastrado com sucesso!', { id: toastId });
-        onSuccess(); // Fecha o modal e atualiza a lista
+        onSuccess();
       }
     }
     
@@ -83,7 +105,23 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       </div>
       <div>
         <label className="text-sm font-medium text-slate-700">Senha Provisória</label>
-        <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <div className="relative flex items-center">
+          <Input
+            type="text"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="pr-20"
+          />
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-2">
+            <button type="button" onClick={handleRegeneratePassword} title="Gerar nova senha" className="text-slate-500 hover:text-slate-800">
+              <RefreshCw className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={handleCopyPassword} title="Copiar senha" className="text-slate-500 hover:text-slate-800">
+              <Copy className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
