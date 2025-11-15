@@ -2,18 +2,21 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Apartment, RentStatus } from '../../types';
 import { supabase } from '../../services/supabase';
-import { DollarSign, Home, Mail, Phone, Calendar, Wrench, Bell } from 'lucide-react';
+import { DollarSign, Home, Mail, Phone, Calendar, Wrench, Bell, CalendarClock, X } from 'lucide-react';
 import AvatarUploader from '../../components/tenant/AvatarUploader';
 import StatusBadge from '../../components/common/StatusBadge'; 
 import { Button } from '../../components/ui/Button';
 import ComplaintFormDialog from '../../components/tenant/ComplaintFormDialog'; 
 import toast from 'react-hot-toast';
+import { differenceInDays, startOfDay } from 'date-fns';
 
 const TenantDashboardPage: React.FC = () => {
   const { profile } = useAuth();
   const [apartment, setApartment] = useState<Apartment | null>(null);
   const [loadingApartment, setLoadingApartment] = useState(true);
-  const [isComplaintDialogOpen, setIsComplaintDialogOpen] = useState(false); 
+  const [isComplaintDialogOpen, setIsComplaintDialogOpen] = useState(false);
+  const [isDueDateAlertVisible, setIsDueDateAlertVisible] = useState(true);
+  const [daysUntilDue, setDaysUntilDue] = useState<number | null>(null);
 
   const fetchApartmentDetails = useCallback(async () => {
     if (!profile?.apartment_number) {
@@ -30,11 +33,27 @@ const TenantDashboardPage: React.FC = () => {
     if (error) {
       console.error('Error fetching apartment details:', error);
     } else {
-      // Garantir que o status seja 'pending' se for null no DB
       setApartment({ ...data, rent_status: data.rent_status || 'pending' } as Apartment);
     }
     setLoadingApartment(false);
   }, [profile]);
+
+  // Efeito para calcular o alerta de vencimento
+  useEffect(() => {
+    if (apartment?.next_due_date && apartment.rent_status !== 'paid') {
+      const today = startOfDay(new Date());
+      const dueDate = startOfDay(new Date(apartment.next_due_date));
+      const diff = differenceInDays(dueDate, today);
+      
+      if (diff >= 0 && diff <= 5) {
+        setDaysUntilDue(diff);
+      } else {
+        setDaysUntilDue(null);
+      }
+    } else {
+      setDaysUntilDue(null);
+    }
+  }, [apartment]);
 
   const handleRequestPayment = async () => {
     if (!profile || !apartment) {
@@ -46,12 +65,10 @@ const TenantDashboardPage: React.FC = () => {
         return;
     }
 
-    // Atualização otimista da UI
     setApartment(prev => prev ? { ...prev, payment_request_pending: true } : null);
     const toastId = toast.loading('Enviando solicitação de pagamento...');
 
     try {
-        // Invoca a função de borda segura em vez de atualizar a tabela diretamente
         const { error } = await supabase.functions.invoke('request-payment', {
             body: { apartmentNumber: apartment.number },
         });
@@ -64,17 +81,14 @@ const TenantDashboardPage: React.FC = () => {
     } catch (error) {
         console.error('Error requesting payment:', error);
         toast.error('Falha ao enviar a solicitação de pagamento.', { id: toastId });
-        // Reverte a atualização otimista em caso de falha
         setApartment(prev => prev ? { ...prev, payment_request_pending: false } : null);
     }
   };
 
-  // 1. Efeito para buscar dados iniciais
   useEffect(() => {
     fetchApartmentDetails();
   }, [fetchApartmentDetails]);
 
-  // 2. Efeito para configurar o Realtime Listener
   useEffect(() => {
     if (!profile?.apartment_number) return;
 
@@ -89,7 +103,6 @@ const TenantDashboardPage: React.FC = () => {
           filter: `number=eq.${profile.apartment_number}`
         },
         (payload) => {
-          // O payload.new contém os dados atualizados
           setApartment({ ...payload.new, rent_status: payload.new.rent_status || 'pending' } as Apartment);
         }
       )
@@ -100,7 +113,6 @@ const TenantDashboardPage: React.FC = () => {
     };
   }, [profile?.apartment_number]);
 
-
   const formatCurrency = (value: number | null | undefined) => {
     if (value === null || value === undefined) return 'Não informado';
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -109,6 +121,13 @@ const TenantDashboardPage: React.FC = () => {
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'Não informado';
     return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  const getDueDateMessage = (days: number | null) => {
+    if (days === null) return '';
+    if (days === 0) return 'Seu aluguel vence hoje! Realize o pagamento para evitar atrasos.';
+    if (days === 1) return 'Seu aluguel vence amanhã.';
+    return `Lembrete: seu aluguel vence em ${days} dias.`;
   };
 
   if (!profile) {
@@ -124,13 +143,10 @@ const TenantDashboardPage: React.FC = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Coluna 1: Perfil e Contato */}
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
               <div className="flex justify-between items-center mb-6 border-b dark:border-slate-700 pb-3">
                 <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200">Meu Perfil</h2>
-                
-                {/* Botão de Solicitar Reparo (Ícone) */}
                 <button
                   onClick={() => setIsComplaintDialogOpen(true)} 
                   className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-full transition-colors"
@@ -164,10 +180,8 @@ const TenantDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Coluna 2 & 3: Informações do Apartamento e Ações */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Card de Informações do Apartamento */}
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
               <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center border-b dark:border-slate-700 pb-3">
                 <Home className="w-5 h-5 mr-2 text-slate-500 dark:text-slate-400" />
@@ -194,7 +208,6 @@ const TenantDashboardPage: React.FC = () => {
                   </div>
               </div>
               
-              {/* Status do Aluguel */}
               <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Status do Pagamento</p>
                   {loadingApartment ? (
@@ -204,7 +217,6 @@ const TenantDashboardPage: React.FC = () => {
                   )}
               </div>
 
-              {/* Botão de Pagar Aluguel */}
               <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
                   <Button 
                     onClick={handleRequestPayment} 
@@ -226,10 +238,28 @@ const TenantDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Card de Ações/Avisos */}
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
               <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-4">Avisos e Ações Rápidas</h2>
               <div className="space-y-3">
+                
+                {isDueDateAlertVisible && daysUntilDue !== null && (
+                  <div className="flex items-start justify-between p-3 bg-yellow-50 dark:bg-yellow-900/50 rounded-md border border-yellow-200 dark:border-yellow-800">
+                    <div className="flex items-center">
+                      <CalendarClock className="w-5 h-5 mr-3 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
+                        {getDueDateMessage(daysUntilDue)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setIsDueDateAlertVisible(false)}
+                      className="p-1 -mt-1 -mr-1 text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-200 rounded-full"
+                      title="Dispensar aviso"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-md text-slate-600 dark:text-slate-400">
                     <Bell className="w-4 h-4 mr-3" />
                     <p className="text-sm">Verifique suas notificações para atualizações.</p>
