@@ -72,11 +72,9 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
             payment_request_pending: false // Limpa a flag de solicitação de pagamento
         };
 
-        // Se o status não for 'partial', limpamos os campos de pagamento parcial
-        if (newStatus !== 'partial') {
-            updatePayload.amount_paid = null;
-            updatePayload.remaining_balance = null;
-        }
+        // Como o status não é 'partial' (tratado anteriormente), limpamos os campos de pagamento parcial
+        updatePayload.amount_paid = null;
+        updatePayload.remaining_balance = null;
 
         const { error: updateError } = await supabase
           .from('apartments')
