@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 import { FileObject } from '@supabase/storage-js';
 
 const BUCKET_NAME = 'documents';
+const ACCEPTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export const useDocumentUpload = () => {
   const { user } = useAuth();
@@ -43,8 +45,12 @@ export const useDocumentUpload = () => {
       toast.error('Usuário não autenticado.');
       return;
     }
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > MAX_FILE_SIZE) {
         toast.error('O arquivo é muito grande. O limite é de 5MB.');
+        return;
+    }
+    if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+        toast.error('Formato de arquivo não suportado. Use PDF, JPG ou PNG.');
         return;
     }
 

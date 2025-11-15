@@ -33,7 +33,7 @@ const DocumentUploader: React.FC = () => {
 
   return (
     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
-      <div className="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-3">
+      <div className="flex justify-between items-center mb-2 border-b dark:border-slate-700 pb-3">
         <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 flex items-center">
           <FolderOpen className="w-5 h-5 mr-2 text-slate-500 dark:text-slate-400" />
           Meus Documentos
@@ -52,8 +52,13 @@ const DocumentUploader: React.FC = () => {
           onChange={handleFileChange}
           className="hidden"
           disabled={isUploading}
+          accept="application/pdf,image/jpeg,image/png"
         />
       </div>
+
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+        Formatos aceitos: PDF, JPG, PNG. Tamanho máximo: 5MB.
+      </p>
 
       {isLoading ? (
         <div className="text-center py-8">
