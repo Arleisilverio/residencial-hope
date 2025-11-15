@@ -13,6 +13,7 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
   const { number, tenant } = apartment;
 
   const getMonthlyRent = (aptNumber: number) => {
+    // Lógica de aluguel baseada no número do kit (mantida)
     return aptNumber >= 1 && aptNumber <= 6 ? 1600 : 1800;
   };
 
@@ -71,11 +72,23 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
 
       {tenant ? (
         <div className="flex flex-col flex-grow">
-          <div className="space-y-3 text-sm flex-grow">
-            <div className="flex items-center text-slate-700">
-              <User className="w-4 h-4 mr-3 text-slate-500" />
-              <span className="font-semibold">{tenant.full_name}</span>
+          <div className="flex items-center mb-4">
+            {/* Avatar do Inquilino */}
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-200 flex items-center justify-center mr-3">
+              {tenant.avatar_url ? (
+                <img 
+                  src={tenant.avatar_url} 
+                  alt={tenant.full_name || 'Avatar'} 
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                <User className="w-5 h-5 text-slate-500" />
+              )}
             </div>
+            <span className="font-semibold text-slate-800">{tenant.full_name}</span>
+          </div>
+
+          <div className="space-y-3 text-sm flex-grow">
             <div className="flex items-center text-slate-600">
               <Mail className="w-4 h-4 mr-3 text-slate-500" />
               <span>{tenant.email || 'Email não informado'}</span>
