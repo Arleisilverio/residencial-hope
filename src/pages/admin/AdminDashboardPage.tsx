@@ -4,6 +4,7 @@ import { Apartment } from '../../types';
 import ApartmentCard from '../../components/admin/ApartmentCard';
 import { Button } from '../../components/ui/Button';
 import AddTenantDialog from '../../components/admin/AddTenantDialog';
+import EditTenantDialog from '../../components/admin/EditTenantDialog';
 import { PlusCircle } from 'lucide-react';
 
 const AdminDashboardPage: React.FC = () => {
@@ -11,6 +12,7 @@ const AdminDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddTenantDialogOpen, setIsAddTenantDialogOpen] = useState(false);
+  const [editingApartment, setEditingApartment] = useState<Apartment | null>(null);
 
   const fetchApartments = useCallback(async () => {
     setLoading(true);
@@ -39,7 +41,12 @@ const AdminDashboardPage: React.FC = () => {
 
   const handleTenantAdded = () => {
     setIsAddTenantDialogOpen(false);
-    fetchApartments(); // Re-fetch data to show the new tenant
+    fetchApartments();
+  };
+
+  const handleTenantUpdated = () => {
+    setEditingApartment(null);
+    fetchApartments();
   };
 
   const availableApartments = apartments.filter(apt => apt.status === 'available');
@@ -67,7 +74,7 @@ const AdminDashboardPage: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {apartments.map((apt) => (
-              <ApartmentCard key={apt.number} apartment={apt} />
+              <ApartmentCard key={apt.number} apartment={apt} onEdit={setEditingApartment} />
             ))}
           </div>
         </div>
@@ -77,6 +84,12 @@ const AdminDashboardPage: React.FC = () => {
         onClose={() => setIsAddTenantDialogOpen(false)}
         onSuccess={handleTenantAdded}
         availableApartments={availableApartments}
+      />
+      <EditTenantDialog
+        isOpen={!!editingApartment}
+        onClose={() => setEditingApartment(null)}
+        onSuccess={handleTenantUpdated}
+        apartment={editingApartment}
       />
     </>
   );

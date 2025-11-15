@@ -1,13 +1,13 @@
 import React from 'react';
 import { Apartment } from '../../types';
 import { User, Mail, Phone, Calendar, DollarSign, Pencil } from 'lucide-react';
-import { Button } from '../ui/Button';
 
 interface ApartmentCardProps {
   apartment: Apartment;
+  onEdit: (apartment: Apartment) => void;
 }
 
-const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment }) => {
+const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit }) => {
   const { number, tenant, monthly_rent } = apartment;
 
   const formatDate = (dateString: string) => {
@@ -22,9 +22,20 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 flex flex-col h-full">
-      <h3 className="text-xl font-bold text-slate-800 mb-4">
-        Kit {String(number).padStart(2, '0')}
-      </h3>
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-xl font-bold text-slate-800">
+          Kit {String(number).padStart(2, '0')}
+        </h3>
+        {tenant && (
+          <button
+            onClick={() => onEdit(apartment)}
+            className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
+            title="Editar Inquilino"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        )}
+      </div>
       {tenant ? (
         <div className="flex flex-col flex-grow">
           <div className="space-y-3 text-sm flex-grow">
@@ -49,18 +60,9 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment }) => {
               <span>{formatCurrency(monthly_rent)}</span>
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-slate-200">
-            <Button
-              className="w-full bg-slate-100 text-slate-800 hover:bg-slate-200"
-              onClick={() => alert(`Editar inquilino do Kit ${number}`)}
-            >
-              <Pencil className="w-4 h-4 mr-2" />
-              Editar
-            </Button>
-          </div>
         </div>
       ) : (
-        <div className="flex-grow flex flex-col items-center justify-center bg-slate-50 rounded-md p-4">
+        <div className="flex-grow flex flex-col items-center justify-center bg-slate-50 rounded-md p-4 h-full">
           <User className="w-8 h-8 text-slate-400 mb-2" />
           <p className="text-slate-500 font-medium">Apartamento Vago</p>
         </div>
