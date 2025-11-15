@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
 import { Apartment } from '../../types';
 import ApartmentCard from '../../components/admin/ApartmentCard';
@@ -13,6 +14,7 @@ const AdminDashboardPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isAddTenantDialogOpen, setIsAddTenantDialogOpen] = useState(false);
   const [editingApartment, setEditingApartment] = useState<Apartment | null>(null);
+  const navigate = useNavigate();
 
   const fetchApartments = useCallback(async () => {
     setLoading(true);
@@ -49,6 +51,10 @@ const AdminDashboardPage: React.FC = () => {
     fetchApartments();
   };
 
+  const handleViewTenant = (tenantId: string) => {
+    navigate(`/admin/tenant/${tenantId}`);
+  };
+
   const availableApartments = apartments.filter(apt => apt.status === 'available');
 
   if (loading) {
@@ -74,7 +80,12 @@ const AdminDashboardPage: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {apartments.map((apt) => (
-              <ApartmentCard key={apt.number} apartment={apt} onEdit={setEditingApartment} />
+              <ApartmentCard
+                key={apt.number}
+                apartment={apt}
+                onEdit={setEditingApartment}
+                onView={handleViewTenant}
+              />
             ))}
           </div>
         </div>

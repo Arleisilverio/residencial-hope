@@ -1,13 +1,14 @@
 import React from 'react';
 import { Apartment } from '../../types';
-import { User, Mail, Phone, Calendar, DollarSign, Pencil } from 'lucide-react';
+import { User, Mail, Phone, Calendar, DollarSign, Pencil, Eye } from 'lucide-react';
 
 interface ApartmentCardProps {
   apartment: Apartment;
   onEdit: (apartment: Apartment) => void;
+  onView: (tenantId: string) => void;
 }
 
-const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit }) => {
+const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView }) => {
   const { number, tenant, monthly_rent } = apartment;
 
   const formatDate = (dateString: string) => {
@@ -27,13 +28,22 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit }) => {
           Kit {String(number).padStart(2, '0')}
         </h3>
         {tenant && (
-          <button
-            onClick={() => onEdit(apartment)}
-            className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
-            title="Editar Inquilino"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={() => onView(tenant.id)}
+              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
+              title="Visualizar Inquilino"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onEdit(apartment)}
+              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
+              title="Editar Inquilino"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+          </div>
         )}
       </div>
       {tenant ? (
