@@ -114,19 +114,19 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-slate-700">Nome Completo</label>
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
         <Input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
       </div>
       <div>
-        <label className="text-sm font-medium text-slate-700">Email</label>
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
         <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
       </div>
       <div>
-        <label className="text-sm font-medium text-slate-700">Telefone</label>
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Telefone</label>
         <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
       </div>
       <div>
-        <label className="text-sm font-medium text-slate-700">Senha Provisória</label>
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Senha Provisória</label>
         <div className="relative flex items-center">
           <Input
             type="text"
@@ -136,10 +136,10 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
             className="pr-20"
           />
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-2">
-            <button type="button" onClick={handleRegeneratePassword} title="Gerar nova senha" className="text-slate-500 hover:text-slate-800">
+            <button type="button" onClick={handleRegeneratePassword} title="Gerar nova senha" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-100">
               <RefreshCw className="w-4 h-4" />
             </button>
-            <button type="button" onClick={handleCopyPassword} title="Copiar senha" className="text-slate-500 hover:text-slate-800">
+            <button type="button" onClick={handleCopyPassword} title="Copiar senha" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-100">
               <Copy className="w-4 h-4" />
             </button>
           </div>
@@ -147,11 +147,11 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="text-sm font-medium text-slate-700">Apartamento</label>
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Apartamento</label>
           <select
             value={apartmentNumber}
             onChange={(e) => setApartmentNumber(Number(e.target.value))}
-            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+            className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             required
             disabled={isApartmentSelectionDisabled} // Desabilita se pré-selecionado
           >
@@ -169,18 +169,18 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
             )}
           </select>
           {isApartmentSelectionDisabled && (
-            <p className="text-xs text-slate-500 mt-1">Apartamento pré-selecionado.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Apartamento pré-selecionado.</p>
           )}
         </div>
         <div>
-          <label className="text-sm font-medium text-slate-700">Data de Entrada</label>
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Data de Entrada</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-full justify-start text-left font-normal h-10",
-                  !moveInDate && "text-slate-500"
+                  "w-full justify-start text-left font-normal h-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700",
+                  !moveInDate && "text-slate-500 dark:text-slate-400"
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />

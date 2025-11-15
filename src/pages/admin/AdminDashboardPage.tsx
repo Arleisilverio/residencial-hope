@@ -29,7 +29,7 @@ const AdminDashboardPage: React.FC = () => {
       const allApartments = Array.from({ length: 14 }, (_, i) => {
           const aptNumber = i + 1;
           const found = data.find(d => d.number === aptNumber);
-          return found || { number: aptNumber, status: 'available', tenant_id: null, tenant: null, monthly_rent: null };
+          return found || { number: aptNumber, status: 'available', tenant_id: null, tenant: null, monthly_rent: null, rent_status: null, next_due_date: null };
       });
       setApartments(allApartments as Apartment[]);
     }
@@ -67,7 +67,7 @@ const AdminDashboardPage: React.FC = () => {
   const availableApartments = apartments.filter(apt => apt.status === 'available');
 
   if (loading) {
-    return <div className="text-center p-10">Carregando...</div>;
+    return <div className="text-center p-10 text-slate-600 dark:text-slate-400">Carregando...</div>;
   }
 
   if (error) {
@@ -79,7 +79,7 @@ const AdminDashboardPage: React.FC = () => {
       <div className="p-4 sm:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-slate-900">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
               Painel do Administrador
             </h1>
           </div>

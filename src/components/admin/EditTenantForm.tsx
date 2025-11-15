@@ -54,16 +54,16 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-slate-700">Nome Completo</label>
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
         <Input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
       </div>
       <div>
-        <label className="text-sm font-medium text-slate-700">Email</label>
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
         <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled />
-        <p className="text-xs text-slate-500 mt-1">O email não pode ser alterado.</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">O email não pode ser alterado.</p>
       </div>
       <div>
-        <label className="text-sm font-medium text-slate-700">Telefone</label>
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Telefone</label>
         <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
       </div>
       <div className="flex justify-end pt-4">

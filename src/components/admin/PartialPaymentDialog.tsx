@@ -75,14 +75,14 @@ const PartialPaymentDialog: React.FC<PartialPaymentDialogProps> = ({ isOpen, onC
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         
-        <div className="bg-slate-50 p-4 rounded-md border border-slate-200">
-            <p className="text-sm text-slate-600 mb-1">Inquilino: <span className="font-medium text-slate-800">{apartment.tenant?.full_name || 'N/A'}</span></p>
-            <p className="text-sm text-slate-600 mb-1">Vencimento: <span className="font-medium text-slate-800">{nextDueDate}</span></p>
-            <p className="text-sm text-slate-600">Valor Total do Aluguel: <span className="font-bold text-green-700">{formatCurrency(rentValue)}</span></p>
+        <div className="bg-slate-50 dark:bg-slate-700 p-4 rounded-md border border-slate-200 dark:border-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Inquilino: <span className="font-medium text-slate-800 dark:text-slate-200">{apartment.tenant?.full_name || 'N/A'}</span></p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Vencimento: <span className="font-medium text-slate-800 dark:text-slate-200">{nextDueDate}</span></p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">Valor Total do Aluguel: <span className="font-bold text-green-700 dark:text-green-400">{formatCurrency(rentValue)}</span></p>
         </div>
 
         <div>
-          <label htmlFor="amountPaid" className="text-sm font-medium text-slate-700">Valor Pago (R$)</label>
+          <label htmlFor="amountPaid" className="text-sm font-medium text-slate-700 dark:text-slate-300">Valor Pago (R$)</label>
           <Input 
             id="amountPaid"
             type="number" 
@@ -94,9 +94,9 @@ const PartialPaymentDialog: React.FC<PartialPaymentDialogProps> = ({ isOpen, onC
           />
         </div>
 
-        <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
-            <p className="text-sm text-slate-600">Valor Restante:</p>
-            <p className="text-xl font-bold text-blue-700">{formatCurrency(remainingAmount)}</p>
+        <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md border border-blue-200 dark:border-blue-700">
+            <p className="text-sm text-slate-600 dark:text-slate-400">Valor Restante:</p>
+            <p className="text-xl font-bold text-blue-700 dark:text-blue-400">{formatCurrency(remainingAmount)}</p>
         </div>
 
         <div className="flex justify-end pt-2">
