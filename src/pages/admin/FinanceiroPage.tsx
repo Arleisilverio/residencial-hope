@@ -42,20 +42,20 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange }
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
-  // Define a classe de fundo com base no status
+  // Define a classe de fundo com base no status (usando tom 100 para melhor contraste)
   const getBackgroundColorClass = (status: RentStatus) => {
     if (!isOccupied) return 'bg-white hover:bg-slate-50';
     
     switch (status) {
       case 'paid':
-        return 'bg-green-50 hover:bg-green-100';
+        return 'bg-green-100 hover:bg-green-200';
       case 'partial':
-        return 'bg-pink-50 hover:bg-pink-100';
+        return 'bg-pink-100 hover:bg-pink-200';
       case 'overdue':
-        return 'bg-red-50 hover:bg-red-100';
+        return 'bg-red-100 hover:bg-red-200';
       case 'pending':
       default:
-        return 'bg-yellow-50 hover:bg-yellow-100';
+        return 'bg-yellow-100 hover:bg-yellow-200';
     }
   };
 
@@ -74,7 +74,6 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange }
                 <User className="w-4 h-4 mr-2 flex-shrink-0" />
                 <span className="text-slate-700 truncate">{tenant.full_name}</span>
               </div>
-              {/* Mantemos o StatusBadge para o texto detalhado, mas o fundo do item já dá o feedback de cor */}
               <StatusBadge status={rent_status} />
             </div>
           ) : (
