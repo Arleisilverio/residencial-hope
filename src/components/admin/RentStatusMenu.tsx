@@ -29,24 +29,21 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, curren
       return;
     }
 
-    // 1. Atualização otimista local (para todos, exceto 'partial', que é tratado no FinanceiroPage)
-    if (newStatus !== 'partial') {
-        onLocalStatusChange(newStatus);
-    }
-    
-    setIsMenuOpen(false); // Fecha o menu imediatamente
-
-    // Se for 'partial', o FinanceiroPage abre o diálogo, e a atualização do DB é feita lá.
+    // 1. Se for 'partial', apenas chama a função para abrir o diálogo no FinanceiroPage
     if (newStatus === 'partial') {
-        // A função onLocalStatusChange no FinanceiroPage já está configurada para abrir o diálogo
-        // quando recebe 'partial', então não precisamos fazer nada aqui além de fechar o menu.
+        onLocalStatusChange(newStatus);
+        setIsMenuOpen(false);
         return;
     }
+    
+    // 2. Atualização otimista local (para paid, pending, overdue)
+    onLocalStatusChange(newStatus);
+    setIsMenuOpen(false); 
 
     setIsUpdating(true);
     const toastId = toast.loading(`Atualizando Kit ${String(apartmentNumber).padStart(2, '0')}...`);
 
-    // 2. Atualização no banco de dados (apenas para status que não são 'partial')
+    // 3. Atualização no banco de dados
     const { error } = await supabase
       .from('apartments')
       .update({ rent_status: newStatus })
@@ -59,7 +56,7 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, curren
       toast.success(`Status do Kit ${String(apartmentNumber).padStart(2, '0')} atualizado para ${statusOptions.find(s => s.value === newStatus)?.label}!`, { id: toastId });
     }
 
-    // 3. Recarga global para sincronizar todos os dados (e reverter se houver erro)
+    // 4. Recarga global para sincronizar todos os dados (e reverter se houver erro)
     onStatusChange(); 
     setIsUpdating(false);
   };

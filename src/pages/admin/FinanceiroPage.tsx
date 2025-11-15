@@ -115,10 +115,12 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange, 
           onStatusChange={onStatusChange} 
           onLocalStatusChange={(newStatus) => {
             if (newStatus === 'partial') {
-              // Se for parcial, abre o diálogo
+              // 1. Atualização otimista local para 'partial'
+              onLocalStatusChange(number, newStatus);
+              // 2. Abre o diálogo
               onOpenPartialPayment(apartment);
             } else {
-              // Caso contrário, faz a atualização otimista local
+              // Caso contrário, a lógica de atualização otimista e DB está no RentStatusMenu
               onLocalStatusChange(number, newStatus);
             }
           }}
@@ -158,7 +160,9 @@ const FinanceiroPage: React.FC = () => {
             ...apt, 
             tenant: apt.tenant || null,
             monthly_rent: apt.monthly_rent || defaultRent,
-            rent_status: apt.rent_status || 'pending' // Mantém o fallback para 'pending' se o DB retornar null
+            // Mantemos o fallback para 'pending' se o DB retornar null, 
+            // pois é o estado inicial esperado para um aluguel não pago.
+            rent_status: apt.rent_status || 'pending' 
           };
       });
       setApartments(occupiedApartments as Apartment[]);
@@ -186,6 +190,7 @@ const FinanceiroPage: React.FC = () => {
 
   const handleClosePartialPayment = () => {
     setPartialPaymentApartment(null);
+    // A recarga global é importante aqui para buscar o estado final do DB
     fetchApartments();
   };
 
