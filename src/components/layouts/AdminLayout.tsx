@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { LogOut, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeToggleButton from '../common/ThemeToggleButton';
+import PaymentRequestBell from '../admin/PaymentRequestBell';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -33,6 +34,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <h1 className="text-xl font-bold text-slate-800 dark:text-slate-200">Condomínio Hope</h1>
             </div>
             <div className="flex items-center space-x-2">
+              {/* Sino de Notificação de Pagamento */}
+              <PaymentRequestBell />
+
               {/* Botão de Gerenciamento Financeiro */}
               <Link
                 to="/admin/financeiro"
