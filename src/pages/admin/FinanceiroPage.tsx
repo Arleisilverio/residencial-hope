@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '../../services/supabase';
 import { Apartment, RentStatus } from '../../types';
-import { DollarSign, Loader2, ArrowLeft, AlertTriangle, Home } from 'lucide-react';
+import { DollarSign, Loader2, ArrowLeft, AlertTriangle, Home, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom'; 
 import RentListItem from '../../components/admin/RentListItem';
-import StatusBadge from '../../components/common/StatusBadge'; // Importando o StatusBadge
+import StatusBadge from '../../components/common/StatusBadge';
 
 const FinanceiroPage: React.FC = () => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -58,17 +58,35 @@ const FinanceiroPage: React.FC = () => {
     );
   }, []);
 
-  const totalOccupiedRent = useMemo(() => {
-    return apartments.reduce((sum, apt) => {
-      if (apt.monthly_rent) {
-        return sum + apt.monthly_rent;
+  const { totalOccupiedRent, totalReceivedRent, totalPendingRent, overdueCount } = useMemo(() => {
+    let totalOccupied = 0;
+    let totalReceived = 0;
+    let overdue = 0;
+
+    apartments.forEach(apt => {
+      const rent = apt.monthly_rent || (apt.number >= 1 && apt.number <= 6 ? 1600 : 1800);
+      
+      totalOccupied += rent;
+
+      if (apt.rent_status === 'paid' || apt.rent_status === 'partial') {
+        // Simplificação: assumimos que 'partial' ou 'paid' significa que o valor total do aluguel foi contabilizado
+        // Em um sistema real, 'partial' exigiria um campo de 'valor pago'. Aqui, usamos o valor total para simplificar.
+        totalReceived += rent;
       }
-      return sum;
-    }, 0);
-  }, [apartments]);
-  
-  const overdueCount = useMemo(() => {
-    return apartments.filter(apt => apt.rent_status === 'overdue').length;
+
+      if (apt.rent_status === 'overdue') {
+        overdue += 1;
+      }
+    });
+
+    const totalPending = totalOccupied - totalReceived;
+
+    return {
+      totalOccupiedRent: totalOccupied,
+      totalReceivedRent: totalReceived,
+      totalPendingRent: totalPending,
+      overdueCount: overdue,
+    };
   }, [apartments]);
 
   const formatCurrency = (value: number) => {
@@ -93,7 +111,7 @@ const FinanceiroPage: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <Link to="/admin/dashboard" className="inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -106,9 +124,10 @@ const FinanceiroPage: React.FC = () => {
         </h1>
         
         {/* View de Totais */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {/* 1. Receita Potencial Total */}
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border-l-4 border-blue-600">
-                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Receita Mensal (Potencial)</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Potencial Mensal</p>
                 <div className="flex items-center mt-1">
                     <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
                     <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
@@ -117,22 +136,35 @@ const FinanceiroPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className={`bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border-l-4 ${overdueCount > 0 ? 'border-red-600' : 'border-green-600'}`}>
-                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Aluguéis Atrasados</p>
+            {/* 2. Receita Recebida */}
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border-l-4 border-green-600">
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Recebido</p>
                 <div className="flex items-center mt-1">
-                    <AlertTriangle className={`w-5 h-5 mr-2 ${overdueCount > 0 ? 'text-red-600' : 'text-green-600'}`} />
+                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mr-2" />
                     <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
-                        {overdueCount}
+                        {formatCurrency(totalReceivedRent)}
                     </span>
                 </div>
             </div>
-            
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border-l-4 border-slate-400">
-                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Unidades Ocupadas/Vagas</p>
+
+            {/* 3. Receita a Receber (Pendente/Atrasado) */}
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border-l-4 border-yellow-600">
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">A Receber</p>
                 <div className="flex items-center mt-1">
-                    <Home className="w-5 h-5 text-slate-600 dark:text-slate-400 mr-2" />
+                    <DollarSign className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2" />
                     <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
-                        {occupiedCount} / {availableCount}
+                        {formatCurrency(totalPendingRent)}
+                    </span>
+                </div>
+            </div>
+
+            {/* 4. Unidades Ocupadas/Atrasadas */}
+            <div className={`bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border-l-4 ${overdueCount > 0 ? 'border-red-600' : 'border-slate-400'}`}>
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Atrasados / Ocupados</p>
+                <div className="flex items-center mt-1">
+                    <AlertTriangle className={`w-5 h-5 mr-2 ${overdueCount > 0 ? 'text-red-600' : 'text-slate-600 dark:text-slate-400'}`} />
+                    <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+                        {overdueCount} / {occupiedCount}
                     </span>
                 </div>
             </div>
