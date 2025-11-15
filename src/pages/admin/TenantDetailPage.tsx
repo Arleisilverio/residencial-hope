@@ -62,7 +62,7 @@ const TenantDetailPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="text-center p-10">Carregando dados do inquilino...</div>;
+    return <div className="text-center p-10 text-slate-600 dark:text-slate-400">Carregando dados do inquilino...</div>;
   }
 
   if (error) {
@@ -70,57 +70,57 @@ const TenantDetailPage: React.FC = () => {
   }
 
   if (!tenant) {
-    return <div className="text-center p-10">Inquilino não encontrado.</div>;
+    return <div className="text-center p-10 text-slate-600 dark:text-slate-400">Inquilino não encontrado.</div>;
   }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <Link to="/admin/dashboard" className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900">
+          <Link to="/admin/dashboard" className="inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar ao Painel
           </Link>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="p-6 border-b border-slate-200">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center">
-              <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mr-4">
-                <User className="w-8 h-8 text-slate-500" />
+              <div className="w-16 h-16 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center mr-4">
+                <User className="w-8 h-8 text-slate-500 dark:text-slate-400" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">{tenant.full_name}</h1>
-                <p className="text-slate-500">Inquilino</p>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{tenant.full_name}</h1>
+                <p className="text-slate-500 dark:text-slate-400">Inquilino</p>
               </div>
             </div>
           </div>
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-slate-800 mb-4">Informações de Contato</h2>
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Informações de Contato</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center text-slate-700">
-                <Mail className="w-4 h-4 mr-3 text-slate-500" />
+              <div className="flex items-center text-slate-700 dark:text-slate-300">
+                <Mail className="w-4 h-4 mr-3 text-slate-500 dark:text-slate-400" />
                 <span>{tenant.email || 'Não informado'}</span>
               </div>
-              <div className="flex items-center text-slate-700">
-                <Phone className="w-4 h-4 mr-3 text-slate-500" />
+              <div className="flex items-center text-slate-700 dark:text-slate-300">
+                <Phone className="w-4 h-4 mr-3 text-slate-500 dark:text-slate-400" />
                 <span>{tenant.phone || 'Não informado'}</span>
               </div>
             </div>
           </div>
-          <div className="p-6 border-t border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-800 mb-4">Detalhes do Contrato</h2>
+          <div className="p-6 border-t border-slate-200 dark:border-slate-700">
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Detalhes do Contrato</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center text-slate-700">
-                <Home className="w-4 h-4 mr-3 text-slate-500" />
+              <div className="flex items-center text-slate-700 dark:text-slate-300">
+                <Home className="w-4 h-4 mr-3 text-slate-500 dark:text-slate-400" />
                 <span>Kit {tenant.apartment ? String(tenant.apartment.number).padStart(2, '0') : 'N/A'}</span>
               </div>
-              <div className="flex items-center text-slate-700">
-                <DollarSign className="w-4 h-4 mr-3 text-slate-500" />
+              <div className="flex items-center text-slate-700 dark:text-slate-300">
+                <DollarSign className="w-4 h-4 mr-3 text-slate-500 dark:text-slate-400" />
                 <span>Aluguel: {formatCurrency(tenant.apartment?.monthly_rent)}</span>
               </div>
-              <div className="flex items-center text-slate-700">
-                <Calendar className="w-4 h-4 mr-3 text-slate-500" />
+              <div className="flex items-center text-slate-700 dark:text-slate-300">
+                <Calendar className="w-4 h-4 mr-3 text-slate-500 dark:text-slate-400" />
                 <span>Início do contrato: {formatDate(tenant.move_in_date)}</span>
               </div>
             </div>
