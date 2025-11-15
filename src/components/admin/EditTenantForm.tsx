@@ -14,7 +14,6 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [monthlyRent, setMonthlyRent] = useState<number | ''>('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -22,7 +21,6 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
       setFullName(apartment.tenant.full_name || '');
       setEmail(apartment.tenant.email || '');
       setPhone(apartment.tenant.phone || '');
-      setMonthlyRent(apartment.monthly_rent || '');
     }
   }, [apartment]);
 
@@ -48,18 +46,6 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
       return;
     }
 
-    // Atualiza a tabela de apartamentos (valor do aluguel)
-    const { error: apartmentError } = await supabase
-      .from('apartments')
-      .update({ monthly_rent: monthlyRent })
-      .eq('number', apartment.number);
-
-    if (apartmentError) {
-      toast.error(`Erro ao atualizar aluguel: ${apartmentError.message}`, { id: toastId });
-      setLoading(false);
-      return;
-    }
-
     toast.success('Dados atualizados com sucesso!', { id: toastId });
     onSuccess();
     setLoading(false);
@@ -79,10 +65,6 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
       <div>
         <label className="text-sm font-medium text-slate-700">Telefone</label>
         <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-      </div>
-      <div>
-        <label className="text-sm font-medium text-slate-700">Valor do Aluguel</label>
-        <Input type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(Number(e.target.value))} required />
       </div>
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={loading}>

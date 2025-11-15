@@ -17,7 +17,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [apartmentNumber, setApartmentNumber] = useState<number | ''>('');
-  const [monthlyRent, setMonthlyRent] = useState<number | ''>('');
   const [loading, setLoading] = useState(false);
 
   const generateRandomPassword = (length = 10) => {
@@ -46,13 +45,15 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !email || !phone || !password || !apartmentNumber || !monthlyRent) {
+    if (!fullName || !email || !phone || !password || !apartmentNumber) {
       toast.error('Por favor, preencha todos os campos.');
       return;
     }
 
     setLoading(true);
     const toastId = toast.loading('Cadastrando inquilino...');
+
+    const monthlyRent = apartmentNumber >= 1 && apartmentNumber <= 6 ? 1600 : 1800;
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -123,27 +124,21 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm font-medium text-slate-700">Apartamento</label>
-          <select
-            value={apartmentNumber}
-            onChange={(e) => setApartmentNumber(Number(e.target.value))}
-            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
-            required
-          >
-            <option value="" disabled>Selecione...</option>
-            {availableApartments.map(apt => (
-              <option key={apt.number} value={apt.number}>
-                Kit {String(apt.number).padStart(2, '0')}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-slate-700">Valor do Aluguel</label>
-          <Input type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(Number(e.target.value))} required />
-        </div>
+      <div>
+        <label className="text-sm font-medium text-slate-700">Apartamento</label>
+        <select
+          value={apartmentNumber}
+          onChange={(e) => setApartmentNumber(Number(e.target.value))}
+          className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+          required
+        >
+          <option value="" disabled>Selecione...</option>
+          {availableApartments.map(apt => (
+            <option key={apt.number} value={apt.number}>
+              Kit {String(apt.number).padStart(2, '0')}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={loading}>
