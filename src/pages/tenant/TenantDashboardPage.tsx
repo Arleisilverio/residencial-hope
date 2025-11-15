@@ -93,7 +93,18 @@ const TenantDashboardPage: React.FC = () => {
           {/* Coluna 1: Perfil e Contato */}
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
-              <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-6 border-b dark:border-slate-700 pb-3">Meu Perfil</h2>
+              <div className="flex justify-between items-center mb-6 border-b dark:border-slate-700 pb-3">
+                <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200">Meu Perfil</h2>
+                
+                {/* Botão de Solicitar Reparo (Ícone) */}
+                <button
+                  onClick={() => setIsComplaintDialogOpen(true)} 
+                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-full transition-colors"
+                  title="Solicitar Reparo / Manutenção"
+                >
+                  <Wrench className="w-5 h-5" />
+                </button>
+              </div>
               
               <AvatarUploader profile={profile} />
 
@@ -164,14 +175,7 @@ const TenantDashboardPage: React.FC = () => {
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
               <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-4">Avisos e Ações Rápidas</h2>
               <div className="space-y-3">
-                <Button 
-                  onClick={() => setIsComplaintDialogOpen(true)} 
-                  className="w-full justify-start bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
-                >
-                  <Wrench className="w-4 h-4 mr-2" />
-                  Solicitar Reparo / Manutenção
-                </Button>
-                {/* Futuras ações aqui */}
+                {/* Ação de Reparo movida para o card de Perfil */}
                 <div className="flex items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-md text-slate-600 dark:text-slate-400">
                     <Bell className="w-4 h-4 mr-3" />
                     <p className="text-sm">Verifique suas notificações para atualizações.</p>
