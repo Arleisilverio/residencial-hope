@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/Button';
 import ComplaintFormDialog from '../../components/tenant/ComplaintFormDialog'; 
 import toast from 'react-hot-toast';
 import { differenceInDays, startOfDay } from 'date-fns';
+import DocumentUploader from '../../components/tenant/DocumentUploader';
 
 const TenantDashboardPage: React.FC = () => {
   const { profile } = useAuth();
@@ -266,6 +267,9 @@ const TenantDashboardPage: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            <DocumentUploader />
+
           </div>
         </div>
       </div>
