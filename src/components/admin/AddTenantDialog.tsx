@@ -8,12 +8,17 @@ interface AddTenantDialogProps {
   onClose: () => void;
   onSuccess: () => void;
   availableApartments: Apartment[];
+  preSelectedApartmentNumber: number | null; // Nova prop
 }
 
-const AddTenantDialog: React.FC<AddTenantDialogProps> = ({ isOpen, onClose, onSuccess, availableApartments }) => {
+const AddTenantDialog: React.FC<AddTenantDialogProps> = ({ isOpen, onClose, onSuccess, availableApartments, preSelectedApartmentNumber }) => {
   return (
     <Dialog isOpen={isOpen} onClose={onClose} title="Adicionar Novo Inquilino">
-      <AddTenantForm availableApartments={availableApartments} onSuccess={onSuccess} />
+      <AddTenantForm 
+        availableApartments={availableApartments} 
+        onSuccess={onSuccess} 
+        preSelectedApartmentNumber={preSelectedApartmentNumber} // Passa para o formulário
+      />
     </Dialog>
   );
 };

@@ -14,16 +14,24 @@ import { cn } from '../../lib/utils';
 interface AddTenantFormProps {
   availableApartments: Apartment[];
   onSuccess: () => void;
+  preSelectedApartmentNumber: number | null; // Nova prop
 }
 
-const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSuccess }) => {
+const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSuccess, preSelectedApartmentNumber }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [apartmentNumber, setApartmentNumber] = useState<number | ''>('');
+  const [apartmentNumber, setApartmentNumber] = useState<number | ''>(preSelectedApartmentNumber || '');
   const [moveInDate, setMoveInDate] = useState<Date | undefined>(new Date());
   const [loading, setLoading] = useState(false);
+
+  // Atualiza o estado do apartamento se a prop mudar (útil se o diálogo for reutilizado)
+  useEffect(() => {
+    if (preSelectedApartmentNumber) {
+      setApartmentNumber(preSelectedApartmentNumber);
+    }
+  }, [preSelectedApartmentNumber]);
 
   const generateRandomPassword = (length = 10) => {
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
@@ -101,6 +109,8 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     setLoading(false);
   };
 
+  const isApartmentSelectionDisabled = !!preSelectedApartmentNumber;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -143,6 +153,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
             onChange={(e) => setApartmentNumber(Number(e.target.value))}
             className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
             required
+            disabled={isApartmentSelectionDisabled} // Desabilita se pré-selecionado
           >
             <option value="" disabled>Selecione...</option>
             {availableApartments.map(apt => (
@@ -150,7 +161,16 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
                 Kit {String(apt.number).padStart(2, '0')}
               </option>
             ))}
+            {/* Se estiver pré-selecionado, garantimos que a opção correta esteja presente mesmo que não esteja na lista de 'available' (embora deva estar) */}
+            {isApartmentSelectionDisabled && !availableApartments.find(apt => apt.number === preSelectedApartmentNumber) && (
+                <option key={preSelectedApartmentNumber} value={preSelectedApartmentNumber}>
+                    Kit {String(preSelectedApartmentNumber).padStart(2, '0')} (Selecionado)
+                </option>
+            )}
           </select>
+          {isApartmentSelectionDisabled && (
+            <p className="text-xs text-slate-500 mt-1">Apartamento pré-selecionado.</p>
+          )}
         </div>
         <div>
           <label className="text-sm font-medium text-slate-700">Data de Entrada</label>

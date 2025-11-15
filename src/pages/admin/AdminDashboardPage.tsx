@@ -5,13 +5,13 @@ import { Apartment } from '../../types';
 import ApartmentCard from '../../components/admin/ApartmentCard';
 import AddTenantDialog from '../../components/admin/AddTenantDialog';
 import EditTenantDialog from '../../components/admin/EditTenantDialog';
-// Removendo a importação de Button e PlusCircle, pois não são mais necessários aqui.
 
 const AdminDashboardPage: React.FC = () => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddTenantDialogOpen, setIsAddTenantDialogOpen] = useState(false);
+  const [apartmentToAdd, setApartmentToAdd] = useState<number | null>(null); // Novo estado para o número do apartamento
   const [editingApartment, setEditingApartment] = useState<Apartment | null>(null);
   const navigate = useNavigate();
 
@@ -40,8 +40,18 @@ const AdminDashboardPage: React.FC = () => {
     fetchApartments();
   }, [fetchApartments]);
 
-  const handleTenantAdded = () => {
+  const handleOpenAddTenant = (aptNumber: number) => {
+    setApartmentToAdd(aptNumber);
+    setIsAddTenantDialogOpen(true);
+  };
+
+  const handleCloseAddTenant = () => {
     setIsAddTenantDialogOpen(false);
+    setApartmentToAdd(null); // Limpa o estado ao fechar
+  };
+
+  const handleTenantAdded = () => {
+    handleCloseAddTenant();
     fetchApartments();
   };
 
@@ -72,7 +82,6 @@ const AdminDashboardPage: React.FC = () => {
             <h1 className="text-3xl font-bold text-slate-900">
               Painel do Administrador
             </h1>
-            {/* O botão de adicionar inquilino foi removido daqui, pois agora está nos cards vagos. */}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {apartments.map((apt) => (
@@ -81,12 +90,7 @@ const AdminDashboardPage: React.FC = () => {
                 apartment={apt}
                 onEdit={setEditingApartment}
                 onView={handleViewTenant}
-                onAddTenant={() => {
-                  // Se o apartamento estiver vago, abrimos o diálogo de adição
-                  if (!apt.tenant) {
-                    setIsAddTenantDialogOpen(true);
-                  }
-                }}
+                onAddTenant={() => handleOpenAddTenant(apt.number)} // Passa o número do apartamento
               />
             ))}
           </div>
@@ -94,9 +98,10 @@ const AdminDashboardPage: React.FC = () => {
       </div>
       <AddTenantDialog
         isOpen={isAddTenantDialogOpen}
-        onClose={() => setIsAddTenantDialogOpen(false)}
+        onClose={handleCloseAddTenant}
         onSuccess={handleTenantAdded}
         availableApartments={availableApartments}
+        preSelectedApartmentNumber={apartmentToAdd} // Passa o número pré-selecionado
       />
       <EditTenantDialog
         isOpen={!!editingApartment}
