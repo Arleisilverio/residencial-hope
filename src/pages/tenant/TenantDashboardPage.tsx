@@ -46,28 +46,26 @@ const TenantDashboardPage: React.FC = () => {
         return;
     }
 
-    setLoadingApartment(true);
+    // Atualização otimista da UI
+    setApartment(prev => prev ? { ...prev, payment_request_pending: true } : null);
     const toastId = toast.loading('Enviando solicitação de pagamento...');
 
     try {
-        const { error } = await supabase
-            .from('apartments')
-            .update({ payment_request_pending: true })
-            .eq('number', apartment.number);
+        // Invoca a função de borda segura em vez de atualizar a tabela diretamente
+        const { error } = await supabase.functions.invoke('request-payment', {
+            body: { apartmentNumber: apartment.number },
+        });
 
         if (error) {
             throw error;
         }
 
-        // O Realtime listener deve atualizar o estado, mas fazemos um update otimista
-        setApartment(prev => prev ? { ...prev, payment_request_pending: true } : null);
-
         toast.success('Solicitação de pagamento enviada ao administrador!', { id: toastId });
     } catch (error) {
         console.error('Error requesting payment:', error);
         toast.error('Falha ao enviar a solicitação de pagamento.', { id: toastId });
-    } finally {
-        setLoadingApartment(false);
+        // Reverte a atualização otimista em caso de falha
+        setApartment(prev => prev ? { ...prev, payment_request_pending: false } : null);
     }
   };
 
