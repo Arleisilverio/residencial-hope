@@ -146,8 +146,10 @@ const TenantDashboardPage: React.FC = () => {
                 <p className="text-sm text-slate-500 mb-2">Status do Pagamento</p>
                 {loadingApartment ? (
                     <p className="text-slate-500">Verificando...</p>
+                ) : apartment?.rent_status ? (
+                    <StatusBadge status={apartment.rent_status} />
                 ) : (
-                    <StatusBadge status={apartment?.rent_status} />
+                    <p className="text-sm text-slate-500">Status de pagamento não definido.</p>
                 )}
             </div>
           </div>
