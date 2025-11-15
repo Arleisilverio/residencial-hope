@@ -20,6 +20,9 @@ importers:
       '@supabase/auth-ui-shared':
         specifier: ^0.1.8
         version: 0.1.8(@supabase/supabase-js@2.81.1)
+      '@supabase/storage-js':
+        specifier: ^2.81.1
+        version: 2.81.1
       '@supabase/supabase-js':
         specifier: ^2.81.1
         version: 2.81.1

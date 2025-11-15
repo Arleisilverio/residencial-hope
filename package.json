@@ -13,6 +13,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
+    "@supabase/storage-js": "^2.81.1",
     "@supabase/supabase-js": "^2.81.1",
     "autoprefixer": "10.4.19",
     "class-variance-authority": "^0.7.1",
