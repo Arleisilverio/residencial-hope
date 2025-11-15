@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Apartment, RentStatus } from '../../types';
 import { supabase } from '../../services/supabase';
@@ -36,29 +36,57 @@ const TenantDashboardPage: React.FC = () => {
   const [apartment, setApartment] = useState<Apartment | null>(null);
   const [loadingApartment, setLoadingApartment] = useState(true);
 
-  useEffect(() => {
-    const fetchApartmentDetails = async () => {
-      if (!profile?.apartment_number) {
-        setLoadingApartment(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('apartments')
-        .select('*')
-        .eq('number', profile.apartment_number)
-        .single();
-
-      if (error) {
-        console.error('Error fetching apartment details:', error);
-      } else {
-        setApartment(data as Apartment);
-      }
+  const fetchApartmentDetails = useCallback(async () => {
+    if (!profile?.apartment_number) {
       setLoadingApartment(false);
-    };
+      return;
+    }
 
-    fetchApartmentDetails();
+    const { data, error } = await supabase
+      .from('apartments')
+      .select('*')
+      .eq('number', profile.apartment_number)
+      .single();
+
+    if (error) {
+      console.error('Error fetching apartment details:', error);
+    } else {
+      setApartment(data as Apartment);
+    }
+    setLoadingApartment(false);
   }, [profile]);
+
+  // 1. Efeito para buscar dados iniciais
+  useEffect(() => {
+    fetchApartmentDetails();
+  }, [fetchApartmentDetails]);
+
+  // 2. Efeito para configurar o Realtime Listener
+  useEffect(() => {
+    if (!profile?.apartment_number) return;
+
+    const channel = supabase
+      .channel(`apartment_${profile.apartment_number}_changes`)
+      .on(
+        'postgres_changes',
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'apartments',
+          filter: `number=eq.${profile.apartment_number}`
+        },
+        (payload) => {
+          // O payload.new contém os dados atualizados
+          setApartment(payload.new as Apartment);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.apartment_number]);
+
 
   const formatCurrency = (value: number | null | undefined) => {
     if (value === null || value === undefined) return 'Não informado';
@@ -146,10 +174,8 @@ const TenantDashboardPage: React.FC = () => {
                 <p className="text-sm text-slate-500 mb-2">Status do Pagamento</p>
                 {loadingApartment ? (
                     <p className="text-slate-500">Verificando...</p>
-                ) : apartment?.rent_status ? (
-                    <StatusBadge status={apartment.rent_status} />
                 ) : (
-                    <p className="text-sm text-slate-500">Status de pagamento não definido.</p>
+                    <StatusBadge status={apartment?.rent_status} />
                 )}
             </div>
           </div>
