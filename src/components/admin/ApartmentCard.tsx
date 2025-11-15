@@ -1,14 +1,15 @@
 import React from 'react';
 import { Apartment } from '../../types';
-import { User, Mail, Phone, Calendar, DollarSign, Pencil, Eye } from 'lucide-react';
+import { User, Mail, Phone, Calendar, DollarSign, Pencil, Eye, UserPlus } from 'lucide-react';
 
 interface ApartmentCardProps {
   apartment: Apartment;
   onEdit: (apartment: Apartment) => void;
   onView: (tenantId: string) => void;
+  onAddTenant: () => void;
 }
 
-const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView }) => {
+const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView, onAddTenant }) => {
   const { number, tenant } = apartment;
 
   const getMonthlyRent = (aptNumber: number) => {
@@ -32,24 +33,34 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
         <h3 className="text-xl font-bold text-slate-800">
           Kit {String(number).padStart(2, '0')}
         </h3>
-        {tenant && (
-          <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-1">
+          {tenant ? (
+            <>
+              <button
+                onClick={() => onView(tenant.id)}
+                className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
+                title="Visualizar Inquilino"
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onEdit(apartment)}
+                className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
+                title="Editar Inquilino"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
             <button
-              onClick={() => onView(tenant.id)}
-              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
-              title="Visualizar Inquilino"
+              onClick={onAddTenant}
+              className="p-2 text-green-600 hover:text-green-800 hover:bg-green-100 rounded-full transition-colors"
+              title="Adicionar Inquilino"
             >
-              <Eye className="w-4 h-4" />
+              <UserPlus className="w-5 h-5" />
             </button>
-            <button
-              onClick={() => onEdit(apartment)}
-              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
-              title="Editar Inquilino"
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       
       {/* Informação do Aluguel (Fixo) */}

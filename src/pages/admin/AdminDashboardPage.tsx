@@ -73,14 +73,13 @@ const AdminDashboardPage: React.FC = () => {
             <h1 className="text-3xl font-bold text-slate-900 mb-4 sm:mb-0">
               Painel do Administrador
             </h1>
-            {/* Botão de ícone para adicionar inquilino */}
+            {/* Botão de ícone para adicionar inquilino (Apenas ícone) */}
             <Button 
               onClick={() => setIsAddTenantDialogOpen(true)}
               title="Adicionar Novo Inquilino"
-              className="p-2 h-auto w-auto sm:px-4 sm:py-2" // Ajusta o padding para ser menor em mobile
+              className="p-2 h-auto w-auto" // Removendo classes de responsividade de texto
             >
-              <PlusCircle className="w-5 h-5 sm:mr-2" />
-              <span className="hidden sm:inline">Adicionar Inquilino</span>
+              <PlusCircle className="w-5 h-5" />
             </Button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -90,6 +89,12 @@ const AdminDashboardPage: React.FC = () => {
                 apartment={apt}
                 onEdit={setEditingApartment}
                 onView={handleViewTenant}
+                onAddTenant={() => {
+                  // Se o apartamento estiver vago, abrimos o diálogo de adição
+                  if (!apt.tenant) {
+                    setIsAddTenantDialogOpen(true);
+                  }
+                }}
               />
             ))}
           </div>
