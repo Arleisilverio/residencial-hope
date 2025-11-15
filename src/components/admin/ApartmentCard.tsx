@@ -9,15 +9,20 @@ interface ApartmentCardProps {
 }
 
 const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView }) => {
-  const { number, tenant, monthly_rent } = apartment;
+  const { number, tenant } = apartment;
+
+  const getMonthlyRent = (aptNumber: number) => {
+    return aptNumber >= 1 && aptNumber <= 6 ? 1600 : 1800;
+  };
+
+  const monthly_rent = getMonthlyRent(number);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Não informado';
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  const formatCurrency = (value: number | null) => {
-    if (value === null || value === undefined) return 'Não informado';
+  const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
@@ -46,6 +51,13 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
           </div>
         )}
       </div>
+      
+      {/* Informação do Aluguel (Fixo) */}
+      <div className="flex items-center text-sm mb-4 p-2 bg-green-50 rounded-md border border-green-200">
+        <DollarSign className="w-4 h-4 mr-3 text-green-600" />
+        <span className="text-green-700 font-semibold">Aluguel Mensal: {formatCurrency(monthly_rent)}</span>
+      </div>
+
       {tenant ? (
         <div className="flex flex-col flex-grow">
           <div className="space-y-3 text-sm flex-grow">
@@ -64,10 +76,6 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
             <div className="flex items-center text-slate-600">
               <Calendar className="w-4 h-4 mr-3 text-slate-500" />
               <span>Início: {formatDate(tenant.move_in_date)}</span>
-            </div>
-            <div className="flex items-center text-slate-600">
-              <DollarSign className="w-4 h-4 mr-3 text-slate-500" />
-              <span>{formatCurrency(monthly_rent)}</span>
             </div>
           </div>
         </div>
