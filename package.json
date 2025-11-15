@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.81.1",
-    "autoprefixer": "^10.4.22",
     "lucide-react": "^0.553.0",
     "postcss": "^8.5.6",
     "react": "^19.2.0",
@@ -19,6 +18,7 @@
     "tailwindcss": "^4.1.17"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
