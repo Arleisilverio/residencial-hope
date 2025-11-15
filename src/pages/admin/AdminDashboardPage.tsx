@@ -1,38 +1,48 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../services/supabase';
 import { Apartment } from '../../types';
 import ApartmentCard from '../../components/admin/ApartmentCard';
+import { Button } from '../../components/ui/Button';
+import AddTenantDialog from '../../components/admin/AddTenantDialog';
+import { PlusCircle } from 'lucide-react';
 
 const AdminDashboardPage: React.FC = () => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAddTenantDialogOpen, setIsAddTenantDialogOpen] = useState(false);
+
+  const fetchApartments = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('apartments')
+      .select('*, tenant:profiles(*)')
+      .order('number', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching apartments:', error);
+      setError('Não foi possível carregar os dados dos apartamentos.');
+    } else {
+      const allApartments = Array.from({ length: 14 }, (_, i) => {
+          const aptNumber = i + 1;
+          const found = data.find(d => d.number === aptNumber);
+          return found || { number: aptNumber, status: 'available', tenant_id: null, tenant: null, monthly_rent: null };
+      });
+      setApartments(allApartments as Apartment[]);
+    }
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    const fetchApartments = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('apartments')
-        .select('*, tenant:profiles(*)')
-        .order('number', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching apartments:', error);
-        setError('Não foi possível carregar os dados dos apartamentos.');
-      } else {
-        // Garante que temos 14 apartamentos, mesmo que alguns não venham do DB
-        const allApartments = Array.from({ length: 14 }, (_, i) => {
-            const aptNumber = i + 1;
-            const found = data.find(d => d.number === aptNumber);
-            return found || { number: aptNumber, status: 'available', tenant_id: null, tenant: null };
-        });
-        setApartments(allApartments as Apartment[]);
-      }
-      setLoading(false);
-    };
-
     fetchApartments();
-  }, []);
+  }, [fetchApartments]);
+
+  const handleTenantAdded = () => {
+    setIsAddTenantDialogOpen(false);
+    fetchApartments(); // Re-fetch data to show the new tenant
+  };
+
+  const availableApartments = apartments.filter(apt => apt.status === 'available');
 
   if (loading) {
     return <div className="text-center p-10">Carregando...</div>;
@@ -43,18 +53,32 @@ const AdminDashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-slate-900 mb-6">
-          Painel do Administrador
-        </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {apartments.map((apt) => (
-            <ApartmentCard key={apt.number} apartment={apt} />
-          ))}
+    <>
+      <div className="min-h-screen bg-slate-100 p-4 sm:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <h1 className="text-3xl font-bold text-slate-900 mb-4 sm:mb-0">
+              Painel do Administrador
+            </h1>
+            <Button onClick={() => setIsAddTenantDialogOpen(true)}>
+              <PlusCircle className="w-4 h-4 mr-2" />
+              Adicionar Inquilino
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {apartments.map((apt) => (
+              <ApartmentCard key={apt.number} apartment={apt} />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+      <AddTenantDialog
+        isOpen={isAddTenantDialogOpen}
+        onClose={() => setIsAddTenantDialogOpen(false)}
+        onSuccess={handleTenantAdded}
+        availableApartments={availableApartments}
+      />
+    </>
   );
 };
 

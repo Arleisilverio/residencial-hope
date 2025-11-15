@@ -12,4 +12,5 @@ export interface Apartment {
   status: 'available' | 'occupied';
   tenant_id: string | null;
   tenant: Profile | null;
+  monthly_rent: number | null;
 }
