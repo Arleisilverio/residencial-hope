@@ -4,32 +4,7 @@ import { Apartment, RentStatus } from '../../types';
 import { supabase } from '../../services/supabase';
 import { DollarSign, Home, Mail, Phone, Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
 import AvatarUploader from '../../components/tenant/AvatarUploader';
-
-// Componente para exibir o status atual (copiado do FinanceiroPage para consistência)
-const StatusBadge: React.FC<{ status: RentStatus }> = ({ status }) => {
-  if (!status) return null;
-
-  const statusMap = {
-    paid: { label: 'Pago', color: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300', icon: CheckCircle },
-    partial: { label: 'Pag. Parcial', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/50 dark:text-pink-300', icon: DollarSign },
-    pending: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300', icon: Clock },
-    overdue: { label: 'Atrasado', color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', icon: XCircle },
-  };
-
-  const statusData = statusMap[status];
-
-  if (!statusData) return null;
-
-  const { label, color, icon: Icon } = statusData;
-
-  return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${color}`}>
-      <Icon className="w-4 h-4 mr-2" />
-      {label}
-    </span>
-  );
-};
-
+import StatusBadge from '../../components/common/StatusBadge'; // Importando o componente comum
 
 const TenantDashboardPage: React.FC = () => {
   const { profile } = useAuth();
@@ -51,7 +26,8 @@ const TenantDashboardPage: React.FC = () => {
     if (error) {
       console.error('Error fetching apartment details:', error);
     } else {
-      setApartment(data as Apartment);
+      // Garantir que o status seja 'pending' se for null no DB
+      setApartment({ ...data, rent_status: data.rent_status || 'pending' } as Apartment);
     }
     setLoadingApartment(false);
   }, [profile]);
@@ -77,7 +53,7 @@ const TenantDashboardPage: React.FC = () => {
         },
         (payload) => {
           // O payload.new contém os dados atualizados
-          setApartment(payload.new as Apartment);
+          setApartment({ ...payload.new, rent_status: payload.new.rent_status || 'pending' } as Apartment);
         }
       )
       .subscribe();
@@ -175,7 +151,7 @@ const TenantDashboardPage: React.FC = () => {
                 {loadingApartment ? (
                     <p className="text-slate-500 dark:text-slate-400">Verificando...</p>
                 ) : (
-                    <StatusBadge status={apartment?.rent_status} />
+                    <StatusBadge status={apartment?.rent_status || 'pending'} />
                 )}
             </div>
           </div>
