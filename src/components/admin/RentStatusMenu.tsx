@@ -7,7 +7,8 @@ import { RentStatus } from '../../types';
 interface RentStatusMenuProps {
   apartmentNumber: number;
   currentStatus: RentStatus;
-  onStatusChange: () => void;
+  onStatusChange: () => void; // Recarga global
+  onLocalStatusChange: (newStatus: RentStatus) => void; // Atualização otimista local
 }
 
 // Adicionando DollarSign para o ícone de Pagamento Parcial
@@ -18,7 +19,7 @@ const statusOptions: { value: RentStatus; label: string; icon: React.ElementType
   { value: 'overdue', label: 'Atrasado', icon: XCircle, color: 'text-red-600 bg-red-100' },
 ];
 
-const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, currentStatus, onStatusChange }) => {
+const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, currentStatus, onStatusChange, onLocalStatusChange }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -28,23 +29,29 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, curren
       return;
     }
 
+    // 1. Atualização otimista local
+    onLocalStatusChange(newStatus);
+    setIsMenuOpen(false);
+
     setIsUpdating(true);
     const toastId = toast.loading(`Atualizando Kit ${String(apartmentNumber).padStart(2, '0')}...`);
 
+    // 2. Atualização no banco de dados
     const { error } = await supabase
       .from('apartments')
       .update({ rent_status: newStatus })
       .eq('number', apartmentNumber);
 
     if (error) {
+      // Se falhar, a recarga global (onStatusChange) irá reverter o estado local
       toast.error(`Erro ao atualizar status: ${error.message}`, { id: toastId });
     } else {
       toast.success(`Status do Kit ${String(apartmentNumber).padStart(2, '0')} atualizado para ${statusOptions.find(s => s.value === newStatus)?.label}!`, { id: toastId });
-      onStatusChange(); // Recarrega os dados na página principal
     }
 
+    // 3. Recarga global para sincronizar todos os dados (e reverter se houver erro)
+    onStatusChange(); 
     setIsUpdating(false);
-    setIsMenuOpen(false);
   };
 
   return (

@@ -31,11 +31,11 @@ const StatusBadge: React.FC<{ status: RentStatus }> = ({ status }) => {
 interface RentListItemProps {
   apartment: Apartment;
   onStatusChange: () => void;
+  onLocalStatusChange: (apartmentNumber: number, newStatus: RentStatus) => void;
 }
 
-const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange }) => {
+const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange, onLocalStatusChange }) => {
   const { number, tenant, monthly_rent, rent_status } = apartment;
-  // Na FinanceiroPage, agora só recebemos apartamentos ocupados, mas mantemos a verificação por segurança
   const isOccupied = !!tenant; 
   const rentValue = monthly_rent || (number >= 1 && number <= 6 ? 1600 : 1800);
 
@@ -45,7 +45,6 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange }
 
   // Define a classe de fundo com base no status (usando tom 100 para melhor contraste)
   const getBackgroundColorClass = (status: RentStatus) => {
-    // Se não estiver ocupado, retorna branco (embora não deva acontecer mais)
     if (!isOccupied) return 'bg-white hover:bg-slate-50';
     
     switch (status) {
@@ -100,6 +99,7 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange }
             apartmentNumber={number} 
             currentStatus={rent_status} 
             onStatusChange={onStatusChange} 
+            onLocalStatusChange={(newStatus) => onLocalStatusChange(number, newStatus)}
           />
         )}
       </div>
@@ -147,6 +147,17 @@ const FinanceiroPage: React.FC = () => {
   useEffect(() => {
     fetchApartments();
   }, [fetchApartments]);
+
+  // Função para atualização otimista do estado local
+  const handleLocalStatusChange = useCallback((apartmentNumber: number, newStatus: RentStatus) => {
+    setApartments(prevApts => 
+      prevApts.map(apt => 
+        apt.number === apartmentNumber 
+          ? { ...apt, rent_status: newStatus } 
+          : apt
+      )
+    );
+  }, []);
 
   // Cálculo da soma dos aluguéis ocupados
   const totalOccupiedRent = useMemo(() => {
@@ -211,7 +222,12 @@ const FinanceiroPage: React.FC = () => {
             </div>
           ) : (
             apartments.map((apt) => (
-              <RentListItem key={apt.number} apartment={apt} onStatusChange={fetchApartments} />
+              <RentListItem 
+                key={apt.number} 
+                apartment={apt} 
+                onStatusChange={fetchApartments} 
+                onLocalStatusChange={handleLocalStatusChange}
+              />
             ))
           )}
         </div>
