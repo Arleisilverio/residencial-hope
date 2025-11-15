@@ -4,7 +4,12 @@ import { Apartment } from '../../types';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import toast from 'react-hot-toast';
-import { Copy, RefreshCw } from 'lucide-react';
+import { Copy, RefreshCw, Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar } from '../ui/Calendar';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/Popover';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '../../lib/utils';
 
 interface AddTenantFormProps {
   availableApartments: Apartment[];
@@ -17,6 +22,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [apartmentNumber, setApartmentNumber] = useState<number | ''>('');
+  const [moveInDate, setMoveInDate] = useState<Date | undefined>(new Date());
   const [loading, setLoading] = useState(false);
 
   const generateRandomPassword = (length = 10) => {
@@ -45,7 +51,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !email || !phone || !password || !apartmentNumber) {
+    if (!fullName || !email || !phone || !password || !apartmentNumber || !moveInDate) {
       toast.error('Por favor, preencha todos os campos.');
       return;
     }
@@ -63,6 +69,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
           full_name: fullName,
           phone: phone,
           apartment_number: apartmentNumber,
+          move_in_date: moveInDate.toISOString(),
         },
       },
     });
@@ -124,21 +131,49 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
           </div>
         </div>
       </div>
-      <div>
-        <label className="text-sm font-medium text-slate-700">Apartamento</label>
-        <select
-          value={apartmentNumber}
-          onChange={(e) => setApartmentNumber(Number(e.target.value))}
-          className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
-          required
-        >
-          <option value="" disabled>Selecione...</option>
-          {availableApartments.map(apt => (
-            <option key={apt.number} value={apt.number}>
-              Kit {String(apt.number).padStart(2, '0')}
-            </option>
-          ))}
-        </select>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium text-slate-700">Apartamento</label>
+          <select
+            value={apartmentNumber}
+            onChange={(e) => setApartmentNumber(Number(e.target.value))}
+            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+            required
+          >
+            <option value="" disabled>Selecione...</option>
+            {availableApartments.map(apt => (
+              <option key={apt.number} value={apt.number}>
+                Kit {String(apt.number).padStart(2, '0')}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-slate-700">Data de Entrada</label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal h-10",
+                  !moveInDate && "text-slate-500"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {moveInDate ? format(moveInDate, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={moveInDate}
+                onSelect={setMoveInDate}
+                initialFocus
+                locale={ptBR}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={loading}>
