@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabase';
 import { Apartment } from '../../types';
@@ -10,7 +9,7 @@ const AdminApartmentsPage: React.FC = () => {
 
     const fetchData = async () => {
         setLoading(true);
-        const { data, error } = await supabase.from('apartments').select('*, tenant:users(*)');
+        const { data, error } = await supabase.from('apartments').select('*, tenant:profiles(*)');
         if (error) {
             console.error('Error fetching apartments:', error);
         } else if (data) {
@@ -24,11 +23,8 @@ const AdminApartmentsPage: React.FC = () => {
     useEffect(() => {
         fetchData();
         
-        // In a real Supabase app, you would set up realtime listeners here
-        // to automatically update the UI when data changes.
         const channel = supabase.channel('public:apartments')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'apartments' }, fetchData)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'payment_requests' }, fetchData)
             .subscribe();
 
         return () => {

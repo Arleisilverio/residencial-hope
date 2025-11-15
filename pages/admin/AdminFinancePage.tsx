@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabase';
 import { Apartment, RentStatus } from '../../types';
@@ -17,7 +16,7 @@ const AdminFinancePage: React.FC = () => {
 
     const fetchData = async () => {
         setLoading(true);
-        const { data, error } = await supabase.from('apartments').select('*, tenant:users(*)');
+        const { data, error } = await supabase.from('apartments').select('*, tenant:profiles(*)');
         if (error) {
             console.error('Error fetching data:', error);
         } else if (data) {

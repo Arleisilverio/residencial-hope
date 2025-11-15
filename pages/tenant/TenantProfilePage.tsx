@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../services/supabase';
@@ -29,25 +28,25 @@ const TenantProfilePage: React.FC = () => {
         let avatarUrl = user.avatar_url;
 
         if (avatarFile) {
-            const filePath = `${user.id}/${avatarFile.name}`;
-            const { data, error: uploadError } = await supabase.storage.from('avatars').upload(filePath, avatarFile);
+            const filePath = `${user.id}/${Date.now()}`;
+            const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, avatarFile);
             if (uploadError) {
                 toast.error('Erro ao fazer upload do avatar.');
                 setLoading(false);
                 return;
             }
-            // In a real app, you get the public URL from the response.
-            // Our mock returns a picsum URL.
-            avatarUrl = (data as any).publicUrl;
+            const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+            avatarUrl = data.publicUrl;
         }
 
         const updates = {
             full_name: fullName,
             phone: phone,
             avatar_url: avatarUrl,
+            updated_at: new Date().toISOString(),
         };
         
-        const { error } = await supabase.from('users').update(updates).eq('id', user.id);
+        const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
 
         if (error) {
             toast.error('Falha ao atualizar perfil.');

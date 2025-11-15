@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../services/supabase';
 import { UserProfile, UserRole } from '../types';
-import { ADMIN_EMAIL } from '../constants';
+import { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
   role: UserRole | null;
   signIn: (email: string, pass: string) => Promise<any>;
-  signOut: () => void;
+  signOut: () => Promise<any>;
   updateUserProfile: (updates: Partial<UserProfile>) => void;
   signUp: (fullName: string, email: string, pass: string, apartmentNumber: number) => Promise<any>;
   sendPasswordResetEmail: (email: string) => Promise<any>;
@@ -22,42 +22,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [role, setRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
-    const checkUser = async () => {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (session) {
-        const {data: allUsers} = await supabase.from('users').select('*');
-        const profile = allUsers?.find(u => u.id === session.user.id) || null;
-
-        setUser(profile);
-        setRole(profile?.email === ADMIN_EMAIL ? 'admin' : 'tenant');
+    setLoading(true);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        setUser(profile as UserProfile | null);
+        setRole((profile as UserProfile)?.role || 'tenant');
       } else {
         setUser(null);
         setRole(null);
       }
       setLoading(false);
-    };
+    });
 
-    checkUser();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
   
   const signIn = async (email: string, pass: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-    if (!error) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const {data: allUsers} = await supabase.from('users').select('*');
-        const profile = allUsers?.find(u => u.id === session!.user.id) || null;
-        setUser(profile);
-        setRole(profile?.email === ADMIN_EMAIL ? 'admin' : 'tenant');
-    }
-    return { error };
+    return supabase.auth.signInWithPassword({ email, password: pass });
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setRole(null);
+    return supabase.auth.signOut();
   };
 
   const updateUserProfile = (updates: Partial<UserProfile>) => {
@@ -67,7 +60,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signUp = async (fullName: string, email: string, pass: string, apartmentNumber: number) => {
-    const { data, error } = await supabase.auth.signUp({
+    return supabase.auth.signUp({
       email,
       password: pass,
       options: {
@@ -77,19 +70,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
     });
-    if (!error && data.user) {
-      // In our mock, we log the user in directly after sign up.
-      const {data: allUsers} = await supabase.from('users').select('*');
-      const profile = allUsers?.find(u => u.id === data.user!.id) || null;
-      setUser(profile);
-      setRole(profile?.email === ADMIN_EMAIL ? 'admin' : 'tenant');
-    }
-    return { data, error };
   };
 
   const sendPasswordResetEmail = async (email: string) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email);
-    return { data, error };
+    return supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+    });
   };
 
   const value = {
