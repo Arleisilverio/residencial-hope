@@ -16,7 +16,8 @@ const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
 
   const fetchApartments = useCallback(async () => {
-    setLoading(true);
+    // Não mostra o loading em recargas automáticas para uma melhor experiência
+    // setLoading(true); 
     
     // 1. Buscar dados dos apartamentos e inquilinos, incluindo payment_request_pending
     const { data: aptData, error: aptError } = await supabase
@@ -39,12 +40,10 @@ const AdminDashboardPage: React.FC = () => {
 
     if (complaintsError) {
         console.warn('Error fetching pending complaints count:', complaintsError);
-        // Continuamos mesmo com erro, apenas sem a contagem
     }
 
     const pendingComplaintsMap = new Map<number, number>();
     if (complaintsData) {
-        // Agrupar a contagem por apartment_number
         complaintsData.forEach(c => {
             if (c.apartment_number) {
                 pendingComplaintsMap.set(c.apartment_number, (pendingComplaintsMap.get(c.apartment_number) || 0) + 1);
@@ -65,7 +64,7 @@ const AdminDashboardPage: React.FC = () => {
             monthly_rent: null, 
             rent_status: null, 
             next_due_date: null,
-            payment_request_pending: false, // Garantir valor padrão
+            payment_request_pending: false,
             amount_paid: null,
             remaining_balance: null,
         };
@@ -80,9 +79,36 @@ const AdminDashboardPage: React.FC = () => {
     setLoading(false);
   }, []);
 
+  // Efeito para a carga inicial
   useEffect(() => {
     fetchApartments();
   }, [fetchApartments]);
+
+  // Efeito para escutar atualizações em tempo real
+  useEffect(() => {
+    const channel = supabase
+      .channel('apartments-dashboard-changes')
+      .on(
+        'postgres_changes',
+        { 
+          event: '*', // Escuta qualquer evento (INSERT, UPDATE, DELETE)
+          schema: 'public', 
+          table: 'apartments' 
+        },
+        (payload) => {
+          // Quando uma mudança ocorre, simplesmente busca todos os dados novamente.
+          // Isso garante que todas as informações (inquilino, reclamações) estejam consistentes.
+          fetchApartments();
+        }
+      )
+      .subscribe();
+
+    // Limpa a inscrição ao desmontar o componente para evitar vazamentos de memória
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchApartments]);
+
 
   const handleOpenAddTenant = (aptNumber: number) => {
     setApartmentToAdd(aptNumber);
@@ -91,17 +117,17 @@ const AdminDashboardPage: React.FC = () => {
 
   const handleCloseAddTenant = () => {
     setIsAddTenantDialogOpen(false);
-    setApartmentToAdd(null); // Limpa o estado ao fechar
+    setApartmentToAdd(null);
   };
 
   const handleTenantAdded = () => {
     handleCloseAddTenant();
-    fetchApartments();
+    // A atualização em tempo real já cuidará de recarregar os dados
   };
 
   const handleTenantUpdated = () => {
     setEditingApartment(null);
-    fetchApartments();
+    // A atualização em tempo real já cuidará de recarregar os dados
   };
 
   const handleViewTenant = (tenantId: string) => {
