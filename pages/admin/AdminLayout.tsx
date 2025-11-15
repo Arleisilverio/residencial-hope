@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -53,7 +52,7 @@ const AdminLayout: React.FC = () => {
                         className="w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
                     >
                         <LogOut className="h-5 w-5 mr-3" />
-                        Logout
+                        Sair
                     </button>
                 </div>
             </aside>
