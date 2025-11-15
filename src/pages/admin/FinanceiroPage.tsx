@@ -107,7 +107,7 @@ const FinanceiroPage: React.FC = () => {
     fetchApartments(); // Recarrega os dados para obter os valores atualizados
   };
 
-  const { totalOccupiedRent, totalReceivedRent, totalPendingRent, overdueCount } = useMemo(() => {
+  const { totalReceivedRent, totalPendingRent, overdueCount } = useMemo(() => {
     let totalOccupied = 0;
     let totalReceived = 0;
     let overdue = 0;
@@ -132,7 +132,6 @@ const FinanceiroPage: React.FC = () => {
     const totalPending = totalOccupied - totalReceived;
 
     return {
-      totalOccupiedRent: totalOccupied,
       totalReceivedRent: totalReceived,
       totalPendingRent: totalPending,
       overdueCount: overdue,
@@ -175,19 +174,8 @@ const FinanceiroPage: React.FC = () => {
           </h1>
           
           {/* View de Totais */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {/* 1. Receita Potencial Total */}
-              <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border-l-4 border-blue-600">
-                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Potencial Mensal</p>
-                  <div className="flex items-center mt-1">
-                      <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-                      <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
-                          {formatCurrency(totalOccupiedRent)}
-                      </span>
-                  </div>
-              </div>
-
-              {/* 2. Receita Recebida */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              {/* 1. Receita Recebida */}
               <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border-l-4 border-green-600">
                   <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Recebido</p>
                   <div className="flex items-center mt-1">
@@ -198,7 +186,7 @@ const FinanceiroPage: React.FC = () => {
                   </div>
               </div>
 
-              {/* 3. Receita a Receber (Pendente/Atrasado) */}
+              {/* 2. Receita a Receber (Pendente/Atrasado) */}
               <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border-l-4 border-yellow-600">
                   <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">A Receber</p>
                   <div className="flex items-center mt-1">
@@ -209,7 +197,7 @@ const FinanceiroPage: React.FC = () => {
                   </div>
               </div>
 
-              {/* 4. Unidades Ocupadas/Atrasadas */}
+              {/* 3. Unidades Ocupadas/Atrasadas */}
               <div className={`bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border-l-4 ${overdueCount > 0 ? 'border-red-600' : 'border-slate-400'}`}>
                   <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Atrasados / Ocupados</p>
                   <div className="flex items-center mt-1">
