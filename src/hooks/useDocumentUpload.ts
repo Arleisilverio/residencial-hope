@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { FileObject } from '@supabase/storage-js';
+import { FileObject } from '@supabase/supabase-js';
 
 const BUCKET_NAME = 'documents';
 const ACCEPTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
