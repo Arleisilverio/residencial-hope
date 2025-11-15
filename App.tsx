@@ -3,7 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
-import AdminApartmentsPage from './pages/admin/AdminApartmentsPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminFinancePage from './pages/admin/AdminFinancePage';
 import TenantLayout from './pages/tenant/TenantLayout';
 import TenantDashboardPage from './pages/tenant/TenantDashboardPage';
@@ -35,7 +35,7 @@ const Router: React.FC = () => {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/login" element={!user ? <LoginPage /> : <Navigate to={role === 'admin' ? '/admin/apartments' : '/tenant'} />} />
+        <Route path="/login" element={!user ? <LoginPage /> : <Navigate to={role === 'admin' ? '/admin/dashboard' : '/tenant'} />} />
         <Route path="/signup" element={!user ? <SignUpPage /> : <Navigate to="/" />} />
         <Route path="/forgot-password" element={!user ? <ForgotPasswordPage /> : <Navigate to="/" />} />
         
@@ -45,12 +45,12 @@ const Router: React.FC = () => {
         </Route>
 
         <Route path="/admin" element={user && role === 'admin' ? <AdminLayout /> : <Navigate to="/login" />}>
-          <Route index element={<Navigate to="apartments" />} />
-          <Route path="apartments" element={<AdminApartmentsPage />} />
+          <Route index element={<Navigate to="dashboard" />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="finance" element={<AdminFinancePage />} />
         </Route>
 
-        <Route path="*" element={<Navigate to={user ? (role === 'admin' ? '/admin/apartments' : '/tenant') : '/login'} />} />
+        <Route path="*" element={<Navigate to={user ? (role === 'admin' ? '/admin/dashboard' : '/tenant') : '/login'} />} />
       </Routes>
     </HashRouter>
   );

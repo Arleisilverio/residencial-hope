@@ -13,7 +13,7 @@ const AdminLayout: React.FC = () => {
     };
 
     const navItems = [
-        { name: 'Apartamentos', href: '/admin/apartments', icon: Building2 },
+        { name: 'Dashboard', href: '/admin/dashboard', icon: Building2 },
         { name: 'Financeiro', href: '/admin/finance', icon: DollarSign },
         // { name: 'Reclamações', href: '/admin/complaints', icon: Wrench },
         // { name: 'Perfil', href: '/admin/profile', icon: User },

@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Apartment, RentStatus } from '../../types';
-import { User, DollarSign, Calendar, MoreVertical, BellRing, Building } from 'lucide-react';
+import { User, DollarSign, Calendar, MoreVertical, BellRing, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../services/supabase';
 
@@ -34,7 +33,6 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onStatusChange
         if (error) {
             toast.error('Falha ao atualizar status.', { id: toastId });
         } else {
-            // In a real app, also create a notification for the tenant
             await supabase.from('notifications').insert({
                 tenant_id: apartment.tenant_id,
                 title: `Status do Aluguel: ${statusConfig[newStatus].text}`,
@@ -91,6 +89,12 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onStatusChange
                         <Calendar className="h-4 w-4 mr-2 text-hope-green-600" />
                         <span>Vencimento: {new Date(apartment.next_due_date).toLocaleDateString('pt-BR')}</span>
                     </div>
+                    {tenant?.phone && (
+                        <div className="flex items-center">
+                            <Phone className="h-4 w-4 mr-2 text-hope-green-600" />
+                            <span>{tenant.phone}</span>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -111,6 +115,5 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onStatusChange
         </div>
     );
 };
-
 
 export default ApartmentCard;
