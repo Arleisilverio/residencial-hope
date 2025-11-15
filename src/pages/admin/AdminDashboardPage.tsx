@@ -18,7 +18,7 @@ const AdminDashboardPage: React.FC = () => {
   const fetchApartments = useCallback(async () => {
     setLoading(true);
     
-    // 1. Buscar dados dos apartamentos e inquilinos
+    // 1. Buscar dados dos apartamentos e inquilinos, incluindo payment_request_pending
     const { data: aptData, error: aptError } = await supabase
       .from('apartments')
       .select('*, tenant:profiles(*)')
@@ -57,7 +57,18 @@ const AdminDashboardPage: React.FC = () => {
         const aptNumber = i + 1;
         const found = aptData.find(d => d.number === aptNumber);
         
-        const baseApartment = found || { number: aptNumber, status: 'available', tenant_id: null, tenant: null, monthly_rent: null, rent_status: null, next_due_date: null };
+        const baseApartment = found || { 
+            number: aptNumber, 
+            status: 'available', 
+            tenant_id: null, 
+            tenant: null, 
+            monthly_rent: null, 
+            rent_status: null, 
+            next_due_date: null,
+            payment_request_pending: false, // Garantir valor padrão
+            amount_paid: null,
+            remaining_balance: null,
+        };
         
         return {
             ...baseApartment,
