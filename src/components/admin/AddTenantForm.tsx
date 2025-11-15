@@ -81,17 +81,21 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     }
 
     if (authData.user) {
+      // Tenta atualizar o aluguel
       const { error: updateError } = await supabase
         .from('apartments')
         .update({ monthly_rent: monthlyRent })
         .eq('number', apartmentNumber);
 
       if (updateError) {
+        // Se falhar, apenas avisa, mas o usuário já foi criado
         toast.error(`Usuário criado, mas falha ao atualizar aluguel: ${updateError.message}`, { id: toastId });
       } else {
         toast.success('Inquilino cadastrado com sucesso!', { id: toastId });
-        onSuccess();
       }
+      
+      // Chama onSuccess para fechar o diálogo e recarregar a lista
+      onSuccess();
     }
     
     setLoading(false);
