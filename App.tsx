@@ -15,7 +15,7 @@ function App() {
   const { profile, loading } = useAuth();
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen bg-slate-100 text-slate-700">Carregando autenticação...</div>;
+    return <div className="flex justify-center items-center h-screen bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300">Carregando autenticação...</div>;
   }
 
   const AdminRoutes = () => (

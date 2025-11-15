@@ -33,7 +33,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ profile }) => {
   return (
     <div className="relative w-32 h-32 mx-auto mb-4">
       {/* Avatar Display */}
-      <div className="w-full h-full rounded-full overflow-hidden bg-slate-200 flex items-center justify-center shadow-lg border-4 border-white">
+      <div className="w-full h-full rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 flex items-center justify-center shadow-lg border-4 border-white dark:border-slate-800">
         {avatarUrl ? (
           <img 
             src={avatarUrl} 
@@ -41,7 +41,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ profile }) => {
             className="w-full h-full object-cover" 
           />
         ) : (
-          <User className="w-16 h-16 text-slate-500" />
+          <User className="w-16 h-16 text-slate-500 dark:text-slate-400" />
         )}
       </div>
 
