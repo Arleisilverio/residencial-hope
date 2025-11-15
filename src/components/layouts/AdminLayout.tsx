@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogOut } from 'lucide-react';
+import { LogOut, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface AdminLayoutProps {
@@ -31,7 +31,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <div className="flex-shrink-0">
               <h1 className="text-xl font-bold text-slate-800">Condomínio Hope</h1>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-2">
+              {/* Botão de Gerenciamento Financeiro */}
+              <Link
+                to="/admin/financeiro"
+                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-full transition-colors"
+                title="Gerenciamento Financeiro"
+              >
+                <DollarSign className="w-5 h-5" />
+              </Link>
+              
+              {/* Botão de Sair */}
               <button
                 onClick={handleLogout}
                 className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"

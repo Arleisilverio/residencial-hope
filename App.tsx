@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import AdminDashboardPage from './src/pages/admin/AdminDashboardPage';
 import TenantDetailPage from './src/pages/admin/TenantDetailPage';
+import FinanceiroPage from './src/pages/admin/FinanceiroPage'; // Importando a nova página
 import TenantDashboardPage from './src/pages/tenant/TenantDashboardPage';
 import LoginPage from './src/pages/LoginPage';
 import AdminLayout from './src/components/layouts/AdminLayout';
@@ -50,6 +51,7 @@ function App() {
         <Route element={<AdminRoutes />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/tenant/:tenantId" element={<TenantDetailPage />} />
+          <Route path="/admin/financeiro" element={<FinanceiroPage />} /> {/* Nova Rota */}
         </Route>
 
         {/* Rotas do Inquilino */}
