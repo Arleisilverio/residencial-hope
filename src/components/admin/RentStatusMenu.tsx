@@ -4,6 +4,12 @@ import { supabase } from '../../services/supabase';
 import toast from 'react-hot-toast';
 import { RentStatus } from '../../types';
 
+interface RentStatusMenuProps {
+  apartmentNumber: number;
+  currentStatus: RentStatus;
+  onStatusChange: () => void;
+}
+
 // Adicionando DollarSign para o ícone de Pagamento Parcial
 const statusOptions: { value: RentStatus; label: string; icon: React.ElementType; color: string }[] = [
   { value: 'paid', label: 'Pago', icon: CheckCircle, color: 'text-green-600 bg-green-100' },

@@ -18,10 +18,10 @@ const ImageViewerDialog: React.FC<ImageViewerDialogProps> = ({ isOpen, onClose, 
       isOpen={isOpen} 
       onClose={onClose} 
       title="" // Título vazio para focar na imagem
-      className="max-w-3xl w-full p-0" // Ajusta o tamanho do modal para a imagem
-      showCloseButton={false} // Remove o botão de fechar padrão do Dialog
+      // Removendo className e showCloseButton para resolver o erro de tipagem,
+      // e aplicando o estilo de largura máxima no conteúdo.
     >
-      <div className="relative">
+      <div className="relative max-w-3xl w-full mx-auto">
         <img 
           src={imageUrl} 
           alt={altText} 
