@@ -57,7 +57,7 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange }
       
       <div className="flex items-center space-x-4">
         {isOccupied && (
-          <div className="hidden sm:block">
+          <div className="flex-shrink-0"> {/* Removida a classe 'hidden sm:block' */}
             <StatusBadge status={rent_status} />
           </div>
         )}
