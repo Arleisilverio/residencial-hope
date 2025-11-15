@@ -184,7 +184,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
                 {moveInDate ? format(moveInDate, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0 border bg-popover">
               <Calendar
                 mode="single"
                 selected={moveInDate}

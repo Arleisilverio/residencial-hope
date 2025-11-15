@@ -116,7 +116,7 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-0 z-50">
+      <PopoverContent className="w-48 p-0 z-50 border bg-popover text-popover-foreground">
         <div className="py-1">
           {statusOptions.map((option) => {
             const isSelected = option.value === currentStatus;

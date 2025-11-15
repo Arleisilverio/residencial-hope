@@ -99,7 +99,7 @@ const PaymentRequestBell: React.FC = () => {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 z-50" align="end">
+      <PopoverContent className="w-80 z-50 border bg-popover text-popover-foreground" align="end">
         <div className="p-4">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
             Solicitações de Pagamento
