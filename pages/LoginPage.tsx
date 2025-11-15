@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -27,7 +26,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-lg">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-lg">
         <div className="text-center">
           <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-hope-green-100 text-hope-green-600 font-bold text-2xl">
             H
@@ -69,6 +68,12 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
 
+          <div className="text-sm text-right">
+            <Link to="/forgot-password" className="font-medium text-hope-green-600 hover:text-hope-green-500">
+              Esqueceu sua senha?
+            </Link>
+          </div>
+
           <div>
             <button
               type="submit"
@@ -82,6 +87,12 @@ const LoginPage: React.FC = () => {
             </button>
           </div>
         </form>
+        <div className="text-sm text-center text-slate-500">
+          Primeiro acesso?{' '}
+          <Link to="/signup" className="font-medium text-hope-green-600 hover:text-hope-green-500">
+            Cadastre-se aqui
+          </Link>
+        </div>
       </div>
     </div>
   );

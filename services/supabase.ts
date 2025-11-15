@@ -32,6 +32,12 @@ const apartments: Apartment[] = Array.from({ length: 14 }, (_, i) => ({
 apartments[0].tenant_id = 'tenant-1-id';
 apartments[1].tenant_id = 'tenant-2-id';
 apartments[6].tenant_id = 'tenant-3-id';
+apartments.forEach((apt, i) => {
+    if (i > 2 && i !== 6) {
+        apt.status = 'available';
+    }
+});
+
 
 // Add tenants to apartments
 apartments.forEach(ap => {
@@ -79,10 +85,55 @@ export const supabase = {
         return { data: { session: JSON.parse(sessionStr) }, error: null };
       }
       return { data: { session: null }, error: null };
+    },
+    async signUp({ email, password, options }: any) {
+        await mockLatency(500);
+        if (users.some(u => u.email === email)) {
+            return { data: { user: null }, error: { message: 'Usuário com este e-mail já existe.' } };
+        }
+        const apartment = apartments.find(a => a.number === options.data.apartment_number);
+        if (!apartment) {
+            return { data: { user: null }, error: { message: 'Número do apartamento inválido.' } };
+        }
+        if (apartment.tenant_id) {
+            return { data: { user: null }, error: { message: 'Este apartamento já está ocupado.' } };
+        }
+
+        const newUser: UserProfile = {
+            id: `tenant-${users.length + 1}-id`,
+            email,
+            full_name: options.data.full_name,
+            phone: '',
+            role: 'tenant',
+            avatar_url: null,
+            apartment_number: options.data.apartment_number,
+            move_in_date: new Date().toISOString(),
+        };
+        users.push(newUser);
+
+        apartment.tenant_id = newUser.id;
+        apartment.tenant = newUser;
+        apartment.status = 'occupied';
+
+        const session = { user: { id: newUser.id, email: newUser.email }, access_token: 'mock_token' };
+        localStorage.setItem('supabase.auth.token', JSON.stringify(session));
+
+        return { data: { user: newUser, session }, error: null };
+    },
+    async resetPasswordForEmail(email: string) {
+        await mockLatency(800);
+        const userExists = users.some(u => u.email === email);
+        if (!userExists) {
+            // In a real app, you wouldn't reveal if the user exists.
+            // For our mock, we'll just proceed as if it was successful.
+            console.log(`Password reset requested for non-existent user: ${email}`);
+        } else {
+            console.log(`Password reset email sent to ${email}`);
+        }
+        return { data: {}, error: null };
     }
   },
   from: (table: string) => ({
-    // FIX: Refactor select to be chainable and awaitable
     select(query: string = '*') {
         const queryBuilder = {
             _filters: [] as {field: string, value: any}[],
@@ -119,7 +170,6 @@ export const supabase = {
         };
         return queryBuilder;
     },
-    // FIX: Make update synchronous to allow chaining .eq()
     update(newData: any) {
       return {
         eq: async (field: string, value: any) => {
@@ -153,14 +203,13 @@ export const supabase = {
         if (table === 'notifications') {
             notifications.push(newItem as Notification);
         }
-        if (table === 'payment_requests') { // Special handling
+        if (table === 'payment_requests') {
              const apt = apartments.find(a => a.number === newData.apartment_number);
              if (apt) apt.payment_request_pending = true;
         }
         return { data: [newItem], error: null };
     },
   }),
-  // FIX: Move channel and removeChannel to the top-level client object
   channel: (name: string) => ({
       on: (event: any, filter: any, callback: any) => ({
           subscribe: () => {
@@ -183,8 +232,6 @@ export const supabase = {
           async upload(path: string, file: File) {
               await mockLatency(1000);
               console.log(`Uploading ${file.name} to ${bucket}/${path}`);
-              // In a real app, this returns a public URL.
-              // We'll return a placeholder from picsum.
               const publicURL = `https://picsum.photos/seed/${Math.random()}/200`;
               return { data: { publicUrl: publicURL }, error: null };
           }

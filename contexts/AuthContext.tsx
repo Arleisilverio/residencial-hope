@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../services/supabase';
 import { UserProfile, UserRole } from '../types';
@@ -11,6 +10,8 @@ interface AuthContextType {
   signIn: (email: string, pass: string) => Promise<any>;
   signOut: () => void;
   updateUserProfile: (updates: Partial<UserProfile>) => void;
+  signUp: (fullName: string, email: string, pass: string, apartmentNumber: number) => Promise<any>;
+  sendPasswordResetEmail: (email: string) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,9 +27,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session) {
-        // In a real app, you'd fetch the profile from the 'users' table
-        // const { data: profile } = await supabase.from('users').select('*').eq('id', session.user.id).single();
-        // For this mock, we find the user in our mock data
         const {data: allUsers} = await supabase.from('users').select('*');
         const profile = allUsers?.find(u => u.id === session.user.id) || null;
 
@@ -68,6 +66,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const signUp = async (fullName: string, email: string, pass: string, apartmentNumber: number) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: pass,
+      options: {
+        data: {
+          full_name: fullName,
+          apartment_number: apartmentNumber,
+        }
+      }
+    });
+    if (!error && data.user) {
+      // In our mock, we log the user in directly after sign up.
+      const {data: allUsers} = await supabase.from('users').select('*');
+      const profile = allUsers?.find(u => u.id === data.user!.id) || null;
+      setUser(profile);
+      setRole(profile?.email === ADMIN_EMAIL ? 'admin' : 'tenant');
+    }
+    return { data, error };
+  };
+
+  const sendPasswordResetEmail = async (email: string) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+    return { data, error };
+  };
 
   const value = {
     user,
@@ -75,7 +98,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     role,
     signIn,
     signOut,
-    updateUserProfile
+    updateUserProfile,
+    signUp,
+    sendPasswordResetEmail,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

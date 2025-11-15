@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -10,6 +9,8 @@ import TenantLayout from './pages/tenant/TenantLayout';
 import TenantDashboardPage from './pages/tenant/TenantDashboardPage';
 import TenantProfilePage from './pages/tenant/TenantProfilePage';
 import { Toaster } from 'react-hot-toast';
+import SignUpPage from './pages/SignUpPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
 const App: React.FC = () => {
   return (
@@ -35,6 +36,8 @@ const Router: React.FC = () => {
     <HashRouter>
       <Routes>
         <Route path="/login" element={!user ? <LoginPage /> : <Navigate to={role === 'admin' ? '/admin/apartments' : '/tenant'} />} />
+        <Route path="/signup" element={!user ? <SignUpPage /> : <Navigate to="/" />} />
+        <Route path="/forgot-password" element={!user ? <ForgotPasswordPage /> : <Navigate to="/" />} />
         
         <Route path="/tenant" element={user && role === 'tenant' ? <TenantLayout /> : <Navigate to="/login" />}>
           <Route index element={<TenantDashboardPage />} />
