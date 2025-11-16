@@ -1,15 +1,26 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import AdminDashboardPage from './src/pages/admin/AdminDashboardPage';
-import TenantDetailPage from './src/pages/admin/TenantDetailPage';
-import FinanceiroPage from './src/pages/admin/FinanceiroPage'; // Importando a nova página
-import TenantDashboardPage from './src/pages/tenant/TenantDashboardPage';
-import LoginPage from './src/pages/LoginPage';
+import { Toaster } from 'react-hot-toast';
+import { useAuth } from './src/contexts/AuthContext';
+
+// Layouts e Componentes de Proteção
 import AdminLayout from './src/components/layouts/AdminLayout';
 import TenantLayout from './src/components/layouts/TenantLayout';
 import RoleProtectedRoute from './src/components/auth/RoleProtectedRoute';
-import { Toaster } from 'react-hot-toast';
-import { useAuth } from './src/contexts/AuthContext';
+
+// Componente de Carregamento
+const PageLoader = () => (
+  <div className="flex justify-center items-center h-screen bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300">
+    Carregando página...
+  </div>
+);
+
+// Importação dinâmica (lazy loading) das páginas
+const AdminDashboardPage = lazy(() => import('./src/pages/admin/AdminDashboardPage'));
+const TenantDetailPage = lazy(() => import('./src/pages/admin/TenantDetailPage'));
+const FinanceiroPage = lazy(() => import('./src/pages/admin/FinanceiroPage'));
+const TenantDashboardPage = lazy(() => import('./src/pages/tenant/TenantDashboardPage'));
+const LoginPage = lazy(() => import('./src/pages/LoginPage'));
 
 function App() {
   const { profile, loading } = useAuth();
@@ -34,7 +45,6 @@ function App() {
     </RoleProtectedRoute>
   );
 
-  // Lógica de redirecionamento inicial
   const initialRedirectPath = profile?.role === 'admin' 
     ? "/admin/dashboard" 
     : profile?.role === 'tenant' 
@@ -44,28 +54,29 @@ function App() {
   return (
     <>
       <Toaster position="bottom-right" />
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        
-        {/* Rotas do Administrador */}
-        <Route element={<AdminRoutes />}>
-          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-          <Route path="/admin/tenant/:tenantId" element={<TenantDetailPage />} />
-          <Route path="/admin/financeiro" element={<FinanceiroPage />} /> {/* Nova Rota */}
-        </Route>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* Rotas do Administrador */}
+          <Route element={<AdminRoutes />}>
+            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/admin/tenant/:tenantId" element={<TenantDetailPage />} />
+            <Route path="/admin/financeiro" element={<FinanceiroPage />} />
+          </Route>
 
-        {/* Rotas do Inquilino */}
-        <Route element={<TenantRoutes />}>
-          <Route path="/tenant/dashboard" element={<TenantDashboardPage />} />
-          {/* Adicionar outras rotas do inquilino aqui */}
-        </Route>
+          {/* Rotas do Inquilino */}
+          <Route element={<TenantRoutes />}>
+            <Route path="/tenant/dashboard" element={<TenantDashboardPage />} />
+          </Route>
 
-        {/* Rota raiz redireciona com base na role */}
-        <Route 
-          path="/" 
-          element={<Navigate to={initialRedirectPath} replace />} 
-        />
-      </Routes>
+          {/* Rota raiz redireciona com base na role */}
+          <Route 
+            path="/" 
+            element={<Navigate to={initialRedirectPath} replace />} 
+          />
+        </Routes>
+      </Suspense>
     </>
   );
 }
