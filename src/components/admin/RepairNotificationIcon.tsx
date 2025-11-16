@@ -31,7 +31,7 @@ const RepairNotificationIcon: React.FC = () => {
 
   const fetchComplaints = useCallback(async () => {
     setLoading(true);
-    // Busca reclamações com status 'new' e junta com o perfil do inquilino
+    // Busca APENAS reclamações com status 'new'
     const { data, error } = await supabase
       .from('complaints')
       .select(`
@@ -42,7 +42,7 @@ const RepairNotificationIcon: React.FC = () => {
         tenant_id,
         tenant:profiles(full_name)
       `)
-      .eq('status', 'new')
+      .eq('status', 'new') // Filtra apenas por 'new'
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -95,8 +95,14 @@ const RepairNotificationIcon: React.FC = () => {
           schema: 'public',
           table: 'complaints',
         },
-        () => {
-          fetchComplaints();
+        (payload) => {
+            // Se o status for alterado para 'resolved', atualizamos a lista
+            if (payload.new.status === 'resolved') {
+                setComplaints(prev => prev.filter(c => c.id !== payload.new.id));
+            } else {
+                // Para outros updates, recarregamos (ex: se o status voltar para 'new')
+                fetchComplaints();
+            }
         }
       )
       .subscribe();
@@ -112,23 +118,24 @@ const RepairNotificationIcon: React.FC = () => {
     toast('Navegação para a página de Reclamações (em desenvolvimento).', { icon: <Info className="w-5 h-5 text-blue-500" /> });
   };
 
-  const handleMarkAsViewed = async (complaintId: string, aptNumber: number) => {
+  const handleMarkAsResolved = async (complaintId: string, aptNumber: number) => {
     // Atualização otimista da UI
     setComplaints(prev => prev.filter(c => c.id !== complaintId));
 
-    const toastId = toast.loading(`Dispensando Kit ${String(aptNumber).padStart(2, '0')}...`);
+    const toastId = toast.loading(`Marcando Kit ${String(aptNumber).padStart(2, '0')} como resolvido...`);
 
+    // 1. Atualiza o status para 'resolved'
     const { error } = await supabase
       .from('complaints')
-      .update({ status: 'viewed' }) // Novo status 'viewed'
+      .update({ status: 'resolved' }) // Novo status 'resolved'
       .eq('id', complaintId);
 
     if (error) {
-      toast.error('Erro ao marcar como visualizado.', { id: toastId });
+      toast.error('Erro ao marcar como resolvido.', { id: toastId });
       // Reverte a atualização otimista em caso de erro
       fetchComplaints();
     } else {
-      toast.success('Reclamação marcada como visualizada.', { id: toastId });
+      toast.success('Reclamação marcada como resolvida e dispensada.', { id: toastId });
     }
   };
   
@@ -178,9 +185,9 @@ const RepairNotificationIcon: React.FC = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => handleMarkAsViewed(c.id, c.apartment_number)}
+                    onClick={() => handleMarkAsResolved(c.id, c.apartment_number)}
                     className="p-1 text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full transition-colors flex-shrink-0 ml-2"
-                    title="Marcar como visualizado"
+                    title="Marcar como resolvido e dispensar"
                   >
                     <X className="w-4 h-4" />
                   </button>
