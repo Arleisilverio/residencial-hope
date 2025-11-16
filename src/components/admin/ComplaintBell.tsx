@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Bell, Wrench, X, Loader2, Info } from 'lucide-react';
+import React, 'useState', useEffect, useCallback } from 'react';
+import { Wrench, X, Loader2, Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover';
 import { Button } from '../ui/Button';
 import { supabase } from '../../services/supabase';
@@ -80,6 +80,18 @@ const ComplaintBell: React.FC = () => {
         'postgres_changes',
         {
           event: 'INSERT',
+          schema: 'public',
+          table: 'complaints',
+          filter: 'status=eq.new'
+        },
+        () => {
+          fetchComplaints();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
           schema: 'public',
           table: 'complaints',
         },
@@ -174,7 +186,7 @@ const ComplaintBell: React.FC = () => {
                   </button>
                 </div>
               ))}
-               <Button onClick={handleNavigate} className="w-full mt-4 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800">
+               <Button onClick={handleNavigate} className="w-full mt-4" variant="destructive">
                 <Wrench className="w-4 h-4 mr-2" />
                 Gerenciar Reparos
               </Button>
