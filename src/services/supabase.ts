@@ -1,19 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-// --- CÓDIGO DE DIAGNÓSTICO ---
-// Vamos imprimir no console do navegador todas as variáveis de ambiente que o Vite está vendo.
-console.log('Variáveis de ambiente carregadas pelo Vite:', import.meta.env);
-// -----------------------------
+// NOTA: A abordagem padrão de usar variáveis de ambiente (import.meta.env) não funcionou
+// neste ambiente. Para garantir que a aplicação funcione, estamos definindo as chaves
+// diretamente aqui. Esta não é uma prática recomendada para projetos em produção.
 
-// Lê as variáveis de ambiente do Vite da forma padrão e mais segura
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = 'https://cijhhohosmmvbednsapf.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpamhob2hvc21tdmJlZG5zYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxMjAyMDUsImV4cCI6MjA3NDY5NjIwNX0.KQsXtPydEpJTm9UKGln1O0IUzwylL41CkUCU_pBPZrY';
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  // Mensagem de erro mais detalhada
-  console.error('ERRO: VITE_SUPABASE_URL não foi encontrada. Valor:', supabaseUrl);
-  console.error('ERRO: VITE_SUPABASE_ANON_KEY não foi encontrada. Valor:', supabaseAnonKey);
-  throw new Error("As chaves do Supabase não foram carregadas. Verifique se o arquivo .env existe na raiz do projeto e se as variáveis começam com 'VITE_'.");
+  // Esta verificação é mantida por segurança, mas não deve mais falhar.
+  throw new Error("As chaves do Supabase não estão definidas no código.");
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
