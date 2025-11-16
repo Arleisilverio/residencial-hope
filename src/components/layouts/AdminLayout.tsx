@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogOut, DollarSign } from 'lucide-react';
+import { LogOut, DollarSign, FolderOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeToggleButton from '../common/ThemeToggleButton';
 import PaymentRequestBell from '../admin/PaymentRequestBell';
@@ -36,6 +36,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <div className="flex items-center space-x-2">
               {/* Sino de Notificação de Pagamento */}
               <PaymentRequestBell />
+
+              {/* Botão de Gerenciamento de Documentos */}
+              <Link
+                to="/admin/documents"
+                className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                title="Documentos dos Inquilinos"
+              >
+                <FolderOpen className="w-5 h-5" />
+              </Link>
 
               {/* Botão de Gerenciamento Financeiro */}
               <Link

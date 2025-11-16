@@ -19,6 +19,8 @@ const PageLoader = () => (
 const AdminDashboardPage = lazy(() => import('./src/pages/admin/AdminDashboardPage'));
 const TenantDetailPage = lazy(() => import('./src/pages/admin/TenantDetailPage'));
 const FinanceiroPage = lazy(() => import('./src/pages/admin/FinanceiroPage'));
+const AdminDocumentsPage = lazy(() => import('./src/pages/admin/AdminDocumentsPage'));
+const AdminTenantDocumentsPage = lazy(() => import('./src/pages/admin/AdminTenantDocumentsPage'));
 const TenantDashboardPage = lazy(() => import('./src/pages/tenant/TenantDashboardPage'));
 const LoginPage = lazy(() => import('./src/pages/LoginPage'));
 
@@ -63,6 +65,8 @@ function App() {
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/admin/tenant/:tenantId" element={<TenantDetailPage />} />
             <Route path="/admin/financeiro" element={<FinanceiroPage />} />
+            <Route path="/admin/documents" element={<AdminDocumentsPage />} />
+            <Route path="/admin/documents/:tenantId" element={<AdminTenantDocumentsPage />} />
           </Route>
 
           {/* Rotas do Inquilino */}
