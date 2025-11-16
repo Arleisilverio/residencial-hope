@@ -195,7 +195,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 border bg-popover">
               <Calendar
-                mode="single"
                 selected={moveInDate}
                 onSelect={setMoveInDate}
                 initialFocus
