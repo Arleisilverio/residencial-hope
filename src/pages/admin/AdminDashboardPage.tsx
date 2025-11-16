@@ -80,7 +80,8 @@ const AdminDashboardPage: React.FC = () => {
   }, [fetchApartments]);
 
   useEffect(() => {
-    const channel = supabase
+    // 1. Escuta mudanças na tabela 'apartments' (para status de ocupação/aluguel)
+    const aptChannel = supabase
       .channel('apartments-dashboard-changes')
       .on(
         'postgres_changes',
@@ -95,8 +96,25 @@ const AdminDashboardPage: React.FC = () => {
       )
       .subscribe();
 
+    // 2. Escuta mudanças na tabela 'complaints' (para contagem de reclamações pendentes)
+    const complaintsChannel = supabase
+      .channel('complaints-dashboard-changes')
+      .on(
+        'postgres_changes',
+        { 
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public', 
+          table: 'complaints' 
+        },
+        () => {
+          fetchApartments();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(aptChannel);
+      supabase.removeChannel(complaintsChannel);
     };
   }, [fetchApartments]);
 
