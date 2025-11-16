@@ -18,6 +18,7 @@ const TenantDashboardPage: React.FC = () => {
   const [isComplaintDialogOpen, setIsComplaintDialogOpen] = useState(false);
   const [isDueDateAlertVisible, setIsDueDateAlertVisible] = useState(true);
   const [daysUntilDue, setDaysUntilDue] = useState<number | null>(null);
+  const [isRequestingPayment, setIsRequestingPayment] = useState(false); // Novo estado
 
   const fetchApartmentDetails = useCallback(async () => {
     if (!profile?.apartment_number) {
@@ -66,6 +67,7 @@ const TenantDashboardPage: React.FC = () => {
         return;
     }
 
+    setIsRequestingPayment(true); // Inicia o carregamento
     setApartment(prev => prev ? { ...prev, payment_request_pending: true } : null);
     const toastId = toast.loading('Enviando solicitação de pagamento...');
 
@@ -82,7 +84,10 @@ const TenantDashboardPage: React.FC = () => {
     } catch (error) {
         console.error('Error requesting payment:', error);
         toast.error('Falha ao enviar a solicitação de pagamento.', { id: toastId });
+        // Reverte o estado otimista se falhar
         setApartment(prev => prev ? { ...prev, payment_request_pending: false } : null);
+    } finally {
+        setIsRequestingPayment(false); // Finaliza o carregamento
     }
   };
 
@@ -221,10 +226,15 @@ const TenantDashboardPage: React.FC = () => {
               <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
                   <Button 
                     onClick={handleRequestPayment} 
-                    disabled={loadingApartment || apartment?.payment_request_pending}
+                    disabled={loadingApartment || apartment?.payment_request_pending || isRequestingPayment}
                     className="w-full"
                   >
-                    {apartment?.payment_request_pending ? (
+                    {isRequestingPayment ? (
+                        <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Enviando...
+                        </>
+                    ) : apartment?.payment_request_pending ? (
                         <>
                             <Bell className="w-4 h-4 mr-2 animate-pulse" />
                             Solicitação Enviada
