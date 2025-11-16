@@ -185,8 +185,8 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-full justify-start text-left font-normal h-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700",
-                  !moveInDate && "text-slate-500 dark:text-slate-400"
+                  "w-full justify-start text-left font-normal",
+                  !moveInDate && "text-muted-foreground"
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />

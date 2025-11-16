@@ -116,7 +116,7 @@ const EditTenantForm: React.FC<EditTenantFormProps> = ({ apartment, onSuccess })
             value={newPassword}
             readOnly
             placeholder="Clique em 'Gerar' para criar uma nova senha"
-            className="pr-20 bg-slate-50 dark:bg-slate-900/50"
+            className="pr-20 bg-muted"
             aria-label="Nova senha gerada"
           />
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-2">
