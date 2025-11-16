@@ -5,6 +5,7 @@ import { Apartment } from '../../types';
 import ApartmentCard from '../../components/admin/ApartmentCard';
 import AddTenantDialog from '../../components/admin/AddTenantDialog';
 import EditTenantDialog from '../../components/admin/EditTenantDialog';
+import DeleteTenantDialog from '../../components/admin/DeleteTenantDialog';
 
 const AdminDashboardPage: React.FC = () => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -13,13 +14,10 @@ const AdminDashboardPage: React.FC = () => {
   const [isAddTenantDialogOpen, setIsAddTenantDialogOpen] = useState(false);
   const [apartmentToAdd, setApartmentToAdd] = useState<number | null>(null);
   const [editingApartment, setEditingApartment] = useState<Apartment | null>(null);
+  const [deletingApartment, setDeletingApartment] = useState<Apartment | null>(null);
   const navigate = useNavigate();
 
   const fetchApartments = useCallback(async () => {
-    // Não mostra o loading em recargas automáticas para uma melhor experiência
-    // setLoading(true); 
-    
-    // 1. Buscar dados dos apartamentos e inquilinos, incluindo payment_request_pending
     const { data: aptData, error: aptError } = await supabase
       .from('apartments')
       .select('*, tenant:profiles(*)')
@@ -32,7 +30,6 @@ const AdminDashboardPage: React.FC = () => {
       return;
     }
 
-    // 2. Buscar contagem de reclamações pendentes
     const { data: complaintsData, error: complaintsError } = await supabase
       .from('complaints')
       .select('apartment_number, count', { count: 'exact' })
@@ -51,7 +48,6 @@ const AdminDashboardPage: React.FC = () => {
         });
     }
 
-    // 3. Combinar dados
     const allApartments = Array.from({ length: 14 }, (_, i) => {
         const aptNumber = i + 1;
         const found = aptData.find(d => d.number === aptNumber);
@@ -79,31 +75,26 @@ const AdminDashboardPage: React.FC = () => {
     setLoading(false);
   }, []);
 
-  // Efeito para a carga inicial
   useEffect(() => {
     fetchApartments();
   }, [fetchApartments]);
 
-  // Efeito para escutar atualizações em tempo real
   useEffect(() => {
     const channel = supabase
       .channel('apartments-dashboard-changes')
       .on(
         'postgres_changes',
         { 
-          event: '*', // Escuta qualquer evento (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public', 
           table: 'apartments' 
         },
-        (payload) => {
-          // Quando uma mudança ocorre, simplesmente busca todos os dados novamente.
-          // Isso garante que todas as informações (inquilino, reclamações) estejam consistentes.
+        () => {
           fetchApartments();
         }
       )
       .subscribe();
 
-    // Limpa a inscrição ao desmontar o componente para evitar vazamentos de memória
     return () => {
       supabase.removeChannel(channel);
     };
@@ -122,12 +113,14 @@ const AdminDashboardPage: React.FC = () => {
 
   const handleTenantAdded = () => {
     handleCloseAddTenant();
-    // A atualização em tempo real já cuidará de recarregar os dados
   };
 
   const handleTenantUpdated = () => {
     setEditingApartment(null);
-    // A atualização em tempo real já cuidará de recarregar os dados
+  };
+
+  const handleTenantDeleted = () => {
+    setDeletingApartment(null);
   };
 
   const handleViewTenant = (tenantId: string) => {
@@ -161,6 +154,7 @@ const AdminDashboardPage: React.FC = () => {
                 onEdit={setEditingApartment}
                 onView={handleViewTenant}
                 onAddTenant={() => handleOpenAddTenant(apt.number)}
+                onDelete={setDeletingApartment}
               />
             ))}
           </div>
@@ -178,6 +172,12 @@ const AdminDashboardPage: React.FC = () => {
         onClose={() => setEditingApartment(null)}
         onSuccess={handleTenantUpdated}
         apartment={editingApartment}
+      />
+      <DeleteTenantDialog
+        isOpen={!!deletingApartment}
+        onClose={() => setDeletingApartment(null)}
+        onSuccess={handleTenantDeleted}
+        apartment={deletingApartment}
       />
     </>
   );

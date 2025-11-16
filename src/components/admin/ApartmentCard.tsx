@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Apartment } from '../../types';
-import { User, Mail, Phone, Calendar, DollarSign, Pencil, Eye, UserPlus, AlertTriangle, Bell } from 'lucide-react';
+import { User, Mail, Phone, Calendar, DollarSign, Pencil, Eye, UserPlus, AlertTriangle, Bell, Trash2 } from 'lucide-react';
 import ImageViewerDialog from '../common/ImageViewerDialog';
 
 interface ApartmentCardProps {
@@ -8,9 +8,10 @@ interface ApartmentCardProps {
   onEdit: (apartment: Apartment) => void;
   onView: (tenantId: string) => void;
   onAddTenant: () => void;
+  onDelete: (apartment: Apartment) => void;
 }
 
-const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView, onAddTenant }) => {
+const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView, onAddTenant, onDelete }) => {
   const { number, tenant, pending_complaints_count = 0, payment_request_pending } = apartment;
   const [isImageOpen, setIsImageOpen] = useState(false);
 
@@ -46,7 +47,6 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
             Kit {String(number).padStart(2, '0')}
           </h3>
           <div className="flex items-center space-x-1">
-            {/* Ícone de Alerta de Reclamação */}
             {hasPendingComplaints && (
               <div 
                 className="p-2 text-red-600 bg-red-100 dark:bg-red-900/50 rounded-full transition-colors cursor-pointer"
@@ -72,6 +72,13 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
+                <button
+                  onClick={() => onDelete(apartment)}
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-full transition-colors"
+                  title="Remover Inquilino"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </>
             ) : (
               <button
@@ -90,7 +97,6 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
           <span className="text-green-700 dark:text-green-300 font-semibold">Aluguel Mensal: {formatCurrency(monthly_rent)}</span>
         </div>
 
-        {/* ALERTA DE SOLICITAÇÃO DE PAGAMENTO */}
         {tenant && payment_request_pending && (
             <div className="flex items-center text-sm mb-4 p-3 bg-blue-100 dark:bg-blue-900/50 rounded-md border border-blue-300 dark:border-blue-700 animate-pulse">
                 <Bell className="w-4 h-4 mr-3 text-blue-700 dark:text-blue-300" />
