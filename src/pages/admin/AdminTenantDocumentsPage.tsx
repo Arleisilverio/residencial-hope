@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAdminDocumentManager } from '../../hooks/useAdminDocumentManager';
 import { Button } from '../../components/ui/Button';
@@ -8,8 +8,9 @@ import { ptBR } from 'date-fns/locale';
 
 const AdminTenantDocumentsPage: React.FC = () => {
   const { tenantId } = useParams<{ tenantId: string }>();
-  const { documents, isLoading, isUploading, uploadDocument, deleteDocument, getPublicUrl } = useAdminDocumentManager(tenantId);
+  const { documents, isLoading, isUploading, uploadDocument, deleteDocument, createSignedUrlForDownload } = useAdminDocumentManager(tenantId);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -23,6 +24,17 @@ const AdminTenantDocumentsPage: React.FC = () => {
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleDownload = async (fileName: string) => {
+    setIsDownloading(fileName);
+    const url = await createSignedUrlForDownload(fileName);
+    if (url) {
+      // Abrir a URL em uma nova aba; o navegador cuidará do download/visualização.
+      window.open(url, '_blank');
+    }
+    // O toast de erro já é mostrado pelo hook se a URL não for gerada.
+    setIsDownloading(null);
   };
 
   const formatFileSize = (bytes: number) => {
@@ -88,16 +100,18 @@ const AdminTenantDocumentsPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2 ml-2">
-                    <a
-                      href={getPublicUrl(doc.name) || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download
-                      className="p-2 text-slate-500 hover:text-green-600 dark:text-slate-400 dark:hover:text-green-400 rounded-full transition-colors"
+                    <button
+                      onClick={() => handleDownload(doc.name)}
+                      disabled={isDownloading === doc.name}
+                      className="p-2 text-slate-500 hover:text-green-600 dark:text-slate-400 dark:hover:text-green-400 rounded-full transition-colors disabled:cursor-not-allowed"
                       title="Baixar documento"
                     >
-                      <Download className="w-4 h-4" />
-                    </a>
+                      {isDownloading === doc.name ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4" />
+                      )}
+                    </button>
                     <button
                       onClick={() => deleteDocument(doc.name)}
                       className="p-2 text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 rounded-full transition-colors"

@@ -93,13 +93,25 @@ export const useAdminDocumentManager = (tenantId: string | undefined) => {
     }
   };
 
-  const getPublicUrl = (fileName: string) => {
-    if (!tenantId) return null;
-    const { data } = supabase.storage
-      .from(BUCKET_NAME)
-      .getPublicUrl(`${tenantId}/${fileName}`);
-    return data.publicUrl;
+  const createSignedUrlForDownload = async (fileName: string): Promise<string | null> => {
+    if (!tenantId) {
+      toast.error('ID do inquilino não encontrado.');
+      return null;
+    }
+    const filePath = `${tenantId}/${fileName}`;
+    try {
+      const { data, error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .createSignedUrl(filePath, 60); // URL é válida por 60 segundos
+
+      if (error) throw error;
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Error creating signed URL:', error);
+      toast.error('Não foi possível gerar o link para download.');
+      return null;
+    }
   };
 
-  return { documents, isLoading, isUploading, uploadDocument, deleteDocument, getPublicUrl };
+  return { documents, isLoading, isUploading, uploadDocument, deleteDocument, createSignedUrlForDownload };
 };
