@@ -1,8 +1,8 @@
 "use client";
 import React from 'react';
-import { DatePicker } from "@ark-ui/react/date-picker";
+import { DatePicker, type ValueChangeDetails } from "@ark-ui/react/date-picker";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { parseDate, getLocalTimeZone, CalendarDate } from "@internationalized/date";
+import { parseDate, getLocalTimeZone } from "@internationalized/date";
 
 interface CalendarProps {
   selected?: Date;
@@ -16,7 +16,7 @@ const ArkDatePickerComponent: React.FC<CalendarProps> = ({ selected, onSelect })
     : undefined;
 
   // Converte a data do Ark UI de volta para o formato Date ao selecionar
-  const handleValueChange = (details: { value: CalendarDate[] }) => {
+  const handleValueChange = (details: ValueChangeDetails) => {
     if (details.value[0] && onSelect) {
       onSelect(details.value[0].toDate(getLocalTimeZone()));
     }
