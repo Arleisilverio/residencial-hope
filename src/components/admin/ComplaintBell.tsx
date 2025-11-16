@@ -1,0 +1,180 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Bell, Wrench, X, Loader2 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover';
+import { Button } from '../ui/Button';
+import { supabase } from '../../services/supabase';
+import { Apartment } from '../../types';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+
+// Definindo um tipo simples para a notificação de reclamação
+interface ComplaintNotification {
+  id: string;
+  apartment_number: number;
+  category: string;
+  description: string;
+  tenant_id: string;
+  tenant_name: string;
+}
+
+const ComplaintBell: React.FC = () => {
+  const [complaints, setComplaints] = useState<ComplaintNotification[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const fetchComplaints = useCallback(async () => {
+    setLoading(true);
+    // Busca reclamações com status 'new' e junta com o perfil do inquilino
+    const { data, error } = await supabase
+      .from('complaints')
+      .select(`
+        id,
+        apartment_number,
+        category,
+        description,
+        tenant_id,
+        tenant:profiles(full_name)
+      `)
+      .eq('status', 'new')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching complaints:', error);
+      toast.error('Falha ao carregar reclamações pendentes.');
+      setComplaints([]);
+    } else {
+      const formattedData: ComplaintNotification[] = data.map(c => ({
+        id: c.id,
+        apartment_number: c.apartment_number,
+        category: c.category,
+        description: c.description,
+        tenant_id: c.tenant_id,
+        tenant_name: c.tenant?.full_name || 'Inquilino Desconhecido',
+      }));
+      setComplaints(formattedData);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchComplaints();
+  }, [fetchComplaints]);
+
+  // Escuta em tempo real por novas reclamações
+  useEffect(() => {
+    const channel = supabase
+      .channel('complaints-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'complaints',
+        },
+        () => {
+          fetchComplaints();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchComplaints]);
+
+  const handleNavigate = () => {
+    setIsOpen(false);
+    // TODO: Criar uma página de gerenciamento de reclamações e navegar para lá
+    toast.info('Navegação para a página de Reclamações (em desenvolvimento).');
+  };
+
+  const handleMarkAsViewed = async (complaintId: string) => {
+    // Atualização otimista da UI
+    setComplaints(prev => prev.filter(c => c.id !== complaintId));
+
+    const { error } = await supabase
+      .from('complaints')
+      .update({ status: 'viewed' }) // Novo status 'viewed'
+      .eq('id', complaintId);
+
+    if (error) {
+      toast.error('Erro ao marcar como visualizado.');
+      // Reverte a atualização otimista em caso de erro
+      fetchComplaints();
+    } else {
+      toast.success('Reclamação marcada como visualizada.');
+    }
+  };
+  
+  const hasComplaints = complaints.length > 0;
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className="relative p-2 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+          title="Solicitações de Reparo Pendentes"
+        >
+          <Wrench className="w-5 h-5" />
+          {hasComplaints && (
+            <span className="absolute top-0 right-0 flex h-5 w-5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-5 w-5 bg-red-500 text-white text-xs items-center justify-center">
+                {complaints.length}
+              </span>
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 z-50 border bg-popover text-popover-foreground" align="end">
+        <div className="p-4">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center">
+            <Wrench className="w-5 h-5 mr-2 text-red-600 dark:text-red-400" />
+            Reparos Pendentes ({complaints.length})
+          </h3>
+          {loading ? (
+            <div className="flex justify-center py-4">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+            </div>
+          ) : hasComplaints ? (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {complaints.map((c) => (
+                <div key={c.id} className="flex items-start justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                  <div>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200">
+                      Kit {String(c.apartment_number).padStart(2, '0')} - {c.category.charAt(0).toUpperCase() + c.category.slice(1)}
+                    </p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 truncate max-w-[200px]">
+                      {c.description}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+                      Por: {c.tenant_name}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleMarkAsViewed(c.id)}
+                    className="p-1 text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full transition-colors flex-shrink-0 ml-2"
+                    title="Marcar como visualizado"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+               <Button onClick={handleNavigate} className="w-full mt-4 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800">
+                <Wrench className="w-4 h-4 mr-2" />
+                Gerenciar Reparos
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">
+              Nenhuma solicitação de reparo pendente.
+            </p>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+export default ComplaintBell;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bell, DollarSign, X } from 'lucide-react';
+import { Bell, DollarSign, X, Loader2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover';
 import { Button } from '../ui/Button';
 import { supabase } from '../../services/supabase';
@@ -10,9 +10,11 @@ import toast from 'react-hot-toast';
 const PaymentRequestBell: React.FC = () => {
   const [requests, setRequests] = useState<Apartment[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const fetchRequests = useCallback(async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from('apartments')
       .select('*, tenant:profiles(*)')
@@ -24,6 +26,7 @@ const PaymentRequestBell: React.FC = () => {
     } else {
       setRequests(data as Apartment[]);
     }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -104,7 +107,11 @@ const PaymentRequestBell: React.FC = () => {
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
             Solicitações de Pagamento
           </h3>
-          {hasRequests ? (
+          {loading ? (
+            <div className="flex justify-center py-4">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+            </div>
+          ) : hasRequests ? (
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {requests.map((req) => (
                 <div key={req.number} className="flex items-start justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">

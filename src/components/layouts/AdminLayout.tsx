@@ -5,6 +5,7 @@ import { LogOut, DollarSign, FolderOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeToggleButton from '../common/ThemeToggleButton';
 import PaymentRequestBell from '../admin/PaymentRequestBell';
+import ComplaintBell from '../admin/ComplaintBell'; // Importando o novo sino
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -34,6 +35,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <h1 className="text-xl font-bold text-slate-800 dark:text-slate-200">Condomínio Hope</h1>
             </div>
             <div className="flex items-center space-x-2">
+              {/* Sino de Notificação de Reclamações */}
+              <ComplaintBell />
+
               {/* Sino de Notificação de Pagamento */}
               <PaymentRequestBell />
 
