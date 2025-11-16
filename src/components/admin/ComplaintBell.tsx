@@ -3,7 +3,6 @@ import { Bell, Wrench, X, Loader2, Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover';
 import { Button } from '../ui/Button';
 import { supabase } from '../../services/supabase';
-import { Apartment } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -16,6 +15,13 @@ interface ComplaintNotification {
   tenant_id: string;
   tenant_name: string;
 }
+
+const categoryMap: { [key: string]: string } = {
+    hidraulica: 'Hidráulica',
+    eletrica: 'Elétrica',
+    estrutura: 'Estrutura',
+    outros: 'Outros',
+};
 
 const ComplaintBell: React.FC = () => {
   const [complaints, setComplaints] = useState<ComplaintNotification[]>([]);
@@ -94,9 +100,11 @@ const ComplaintBell: React.FC = () => {
     toast('Navegação para a página de Reclamações (em desenvolvimento).', { icon: <Info className="w-5 h-5 text-blue-500" /> });
   };
 
-  const handleMarkAsViewed = async (complaintId: string) => {
+  const handleMarkAsViewed = async (complaintId: string, aptNumber: number) => {
     // Atualização otimista da UI
     setComplaints(prev => prev.filter(c => c.id !== complaintId));
+
+    const toastId = toast.loading(`Dispensando Kit ${String(aptNumber).padStart(2, '0')}...`);
 
     const { error } = await supabase
       .from('complaints')
@@ -104,11 +112,11 @@ const ComplaintBell: React.FC = () => {
       .eq('id', complaintId);
 
     if (error) {
-      toast.error('Erro ao marcar como visualizado.');
+      toast.error('Erro ao marcar como visualizado.', { id: toastId });
       // Reverte a atualização otimista em caso de erro
       fetchComplaints();
     } else {
-      toast.success('Reclamação marcada como visualizada.');
+      toast.success('Reclamação marcada como visualizada.', { id: toastId });
     }
   };
   
@@ -146,11 +154,11 @@ const ComplaintBell: React.FC = () => {
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {complaints.map((c) => (
                 <div key={c.id} className="flex items-start justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                  <div>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200">
-                      Kit {String(c.apartment_number).padStart(2, '0')} - {c.category.charAt(0).toUpperCase() + c.category.slice(1)}
+                  <div className="min-w-0 flex-1 pr-2">
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                      Kit {String(c.apartment_number).padStart(2, '0')} - {categoryMap[c.category] || c.category}
                     </p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 truncate max-w-[200px]">
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2" title={c.description}>
                       {c.description}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
@@ -158,7 +166,7 @@ const ComplaintBell: React.FC = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => handleMarkAsViewed(c.id)}
+                    onClick={() => handleMarkAsViewed(c.id, c.apartment_number)}
                     className="p-1 text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full transition-colors flex-shrink-0 ml-2"
                     title="Marcar como visualizado"
                   >
