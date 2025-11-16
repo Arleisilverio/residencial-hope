@@ -5,7 +5,7 @@ import { LogOut, DollarSign, FolderOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeToggleButton from '../common/ThemeToggleButton';
 import PaymentRequestBell from '../admin/PaymentRequestBell';
-import ComplaintBell from '../admin/ComplaintBell';
+import RepairNotificationIcon from '../admin/RepairNotificationIcon';
 import ImageViewerDialog from '../common/ImageViewerDialog'; // Importando o visualizador
 
 interface AdminLayoutProps {
@@ -46,8 +46,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             
             {/* Ícones de Ação */}
             <div className="flex items-center space-x-1 sm:space-x-2">
-              {/* Sino de Notificação de Reclamações */}
-              <ComplaintBell />
+              {/* Ícone de Notificação de Reparos (Ferramenta) */}
+              <RepairNotificationIcon />
 
               {/* Sino de Notificação de Pagamento */}
               <PaymentRequestBell />

@@ -23,7 +23,7 @@ const categoryMap: { [key: string]: string } = {
     outros: 'Outros',
 };
 
-const ComplaintBell: React.FC = () => {
+const RepairNotificationIcon: React.FC = () => {
   const [complaints, setComplaints] = useState<ComplaintNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -202,4 +202,4 @@ const ComplaintBell: React.FC = () => {
   );
 };
 
-export default ComplaintBell;
+export default RepairNotificationIcon;
