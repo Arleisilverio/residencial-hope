@@ -27,7 +27,7 @@ const RepairNotificationIcon: React.FC = () => {
   const [complaints, setComplaints] = useState<ComplaintNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  // Removendo useNavigate pois não será mais usado
 
   const fetchComplaints = useCallback(async () => {
     setLoading(true);
@@ -112,11 +112,7 @@ const RepairNotificationIcon: React.FC = () => {
     };
   }, [fetchComplaints]);
 
-  const handleNavigate = () => {
-    setIsOpen(false);
-    // TODO: Criar uma página de gerenciamento de reclamações e navegar para lá
-    toast('Navegação para a página de Reclamações (em desenvolvimento).', { icon: <Info className="w-5 h-5 text-blue-500" /> });
-  };
+  // Removendo handleNavigate
 
   const handleMarkAsResolved = async (complaintId: string, aptNumber: number) => {
     // Atualização otimista da UI
@@ -193,10 +189,7 @@ const RepairNotificationIcon: React.FC = () => {
                   </button>
                 </div>
               ))}
-               <Button onClick={handleNavigate} className="w-full mt-4" variant="destructive">
-                <Wrench className="w-4 h-4 mr-2" />
-                Gerenciar Reparos
-              </Button>
+              {/* Botão Gerenciar Reparos removido */}
             </div>
           ) : (
             <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">
