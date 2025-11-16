@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { LogOut, DollarSign, FolderOpen } from 'lucide-react';
@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import ThemeToggleButton from '../common/ThemeToggleButton';
 import PaymentRequestBell from '../admin/PaymentRequestBell';
 import ComplaintBell from '../admin/ComplaintBell';
+import ImageViewerDialog from '../common/ImageViewerDialog'; // Importando o visualizador
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -14,6 +15,7 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const [isLogoViewerOpen, setIsLogoViewerOpen] = useState(false); // Novo estado
 
   const handleLogout = async () => {
     const toastId = toast.loading('Saindo...');
@@ -33,13 +35,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <Link to="/admin/dashboard">
+              <button onClick={() => setIsLogoViewerOpen(true)} title="Visualizar Logo">
                 <img 
                   src="/logo.jpeg" 
                   alt="Condomínio Hope Logo" 
-                  className="h-10 w-auto object-contain" 
+                  className="h-12 w-auto object-contain cursor-pointer" 
                 />
-              </Link>
+              </button>
             </div>
             
             {/* Ícones de Ação */}
@@ -86,6 +88,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <main>
         {children}
       </main>
+      
+      {/* Visualizador de Imagem da Logo */}
+      <ImageViewerDialog
+        isOpen={isLogoViewerOpen}
+        onClose={() => setIsLogoViewerOpen(false)}
+        imageUrl="/logo.jpeg"
+        altText="Logo Condomínio Hope"
+      />
     </div>
   );
 };
