@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Apartment, RentStatus } from '../../types';
 import { supabase } from '../../services/supabase';
-import { DollarSign, Home, Mail, Phone, Calendar, Wrench, Bell, CalendarClock, X } from 'lucide-react';
+import { DollarSign, Home, Mail, Phone, Calendar, Wrench, Bell, CalendarClock, X, Loader2 } from 'lucide-react';
 import AvatarUploader from '../../components/tenant/AvatarUploader';
 import StatusBadge from '../../components/common/StatusBadge'; 
 import { Button } from '../../components/ui/Button';
