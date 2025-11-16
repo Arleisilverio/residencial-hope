@@ -5,7 +5,7 @@ import { LogOut, DollarSign, FolderOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeToggleButton from '../common/ThemeToggleButton';
 import PaymentRequestBell from '../admin/PaymentRequestBell';
-import ComplaintBell from '../admin/ComplaintBell'; // Importando o novo sino
+import ComplaintBell from '../admin/ComplaintBell';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -31,10 +31,19 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <header className="bg-white dark:bg-slate-800 shadow-sm dark:shadow-black/20 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
+            {/* Logo */}
             <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-slate-800 dark:text-slate-200">Condomínio Hope</h1>
+              <Link to="/admin/dashboard">
+                <img 
+                  src="/logo.jpeg" 
+                  alt="Condomínio Hope Logo" 
+                  className="h-10 w-auto object-contain" 
+                />
+              </Link>
             </div>
-            <div className="flex items-center space-x-2">
+            
+            {/* Ícones de Ação */}
+            <div className="flex items-center space-x-1 sm:space-x-2">
               {/* Sino de Notificação de Reclamações */}
               <ComplaintBell />
 
