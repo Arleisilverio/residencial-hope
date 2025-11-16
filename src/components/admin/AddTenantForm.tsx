@@ -197,7 +197,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
               <Calendar
                 selected={moveInDate}
                 onSelect={setMoveInDate}
-                initialFocus
               />
             </PopoverContent>
           </Popover>
