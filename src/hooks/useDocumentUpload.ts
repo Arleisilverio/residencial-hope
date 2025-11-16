@@ -3,6 +3,7 @@ import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { FileObject } from '@supabase/storage-js';
+import { sanitizeFileName } from '../lib/utils'; // Importando a função de sanitização
 
 const BUCKET_NAME = 'documents';
 const ACCEPTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
@@ -56,7 +57,10 @@ export const useDocumentUpload = () => {
 
     setIsUploading(true);
     const toastId = toast.loading(`Enviando ${file.name}...`);
-    const filePath = `${user.id}/${file.name}`;
+    
+    // Sanitiza o nome do arquivo antes de construir o caminho
+    const sanitizedFileName = sanitizeFileName(file.name);
+    const filePath = `${user.id}/${sanitizedFileName}`;
 
     try {
       const { error } = await supabase.storage
@@ -89,6 +93,7 @@ export const useDocumentUpload = () => {
     }
 
     const toastId = toast.loading(`Excluindo ${fileName}...`);
+    // O nome do arquivo é o nome sanitizado no storage
     const filePath = `${user.id}/${fileName}`;
 
     try {

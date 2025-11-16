@@ -50,3 +50,16 @@ export const formatEmail = (value: string): string => {
   if (!value) return "";
   return value.toLowerCase();
 };
+
+/**
+ * Sanitiza um nome de arquivo, removendo caracteres especiais e espaços.
+ * @param fileName O nome do arquivo.
+ * @returns O nome do arquivo sanitizado.
+ */
+export const sanitizeFileName = (fileName: string): string => {
+  if (!fileName) return 'file';
+  // Substitui espaços e caracteres especiais (exceto ponto e hífen) por underscore
+  const sanitized = fileName.replace(/[^a-zA-Z0-9.\-]/g, '_');
+  // Remove múltiplos underscores seguidos
+  return sanitized.replace(/_+/g, '_');
+};
