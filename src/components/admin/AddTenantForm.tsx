@@ -190,13 +190,15 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {moveInDate ? format(moveInDate, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                {moveInDate ? format(moveInDate, "dd/MM/yyyy") : <span>Escolha uma data</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 border bg-popover">
               <Calendar
+                mode="single"
                 selected={moveInDate}
                 onSelect={setMoveInDate}
+                initialFocus
               />
             </PopoverContent>
           </Popover>
