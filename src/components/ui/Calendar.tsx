@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
-import { DatePicker, type ValueChangeDetails } from "@ark-ui/react/date-picker";
+import { DatePicker } from "@ark-ui/react/date-picker";
+import { type ValueChangeDetails } from "@ark-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { parseDate, getLocalTimeZone } from "@internationalized/date";
 
