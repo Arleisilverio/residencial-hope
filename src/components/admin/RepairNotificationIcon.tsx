@@ -3,7 +3,6 @@ import { Wrench, X, Loader2, Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover';
 import { Button } from '../ui/Button';
 import { supabase } from '../../services/supabase';
-import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 // Definindo um tipo simples para a notificação de reclamação
@@ -27,7 +26,6 @@ const RepairNotificationIcon: React.FC = () => {
   const [complaints, setComplaints] = useState<ComplaintNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  // Removendo useNavigate pois não será mais usado
 
   const fetchComplaints = useCallback(async () => {
     setLoading(true);
@@ -72,7 +70,7 @@ const RepairNotificationIcon: React.FC = () => {
     fetchComplaints();
   }, [fetchComplaints]);
 
-  // Escuta em tempo real por novas reclamações
+  // Escuta em tempo real por novas reclamações e atualizações de status
   useEffect(() => {
     const channel = supabase
       .channel('complaints-channel')
@@ -85,6 +83,7 @@ const RepairNotificationIcon: React.FC = () => {
           filter: 'status=eq.new'
         },
         () => {
+          // Nova reclamação inserida, recarrega a lista
           fetchComplaints();
         }
       )
@@ -95,14 +94,10 @@ const RepairNotificationIcon: React.FC = () => {
           schema: 'public',
           table: 'complaints',
         },
-        (payload) => {
-            // Se o status for alterado para 'resolved', atualizamos a lista
-            if (payload.new.status === 'resolved') {
-                setComplaints(prev => prev.filter(c => c.id !== payload.new.id));
-            } else {
-                // Para outros updates, recarregamos (ex: se o status voltar para 'new')
-                fetchComplaints();
-            }
+        () => {
+            // Qualquer atualização (incluindo a mudança de status para 'resolved')
+            // aciona a recarga completa, garantindo que apenas 'new' sejam exibidas.
+            fetchComplaints();
         }
       )
       .subscribe();
@@ -112,26 +107,32 @@ const RepairNotificationIcon: React.FC = () => {
     };
   }, [fetchComplaints]);
 
-  // Removendo handleNavigate
-
   const handleMarkAsResolved = async (complaintId: string, aptNumber: number) => {
-    // Atualização otimista da UI
+    // 1. Atualização otimista da UI (remove imediatamente)
     setComplaints(prev => prev.filter(c => c.id !== complaintId));
 
     const toastId = toast.loading(`Marcando Kit ${String(aptNumber).padStart(2, '0')} como resolvido...`);
 
-    // 1. Atualiza o status para 'resolved'
-    const { error } = await supabase
-      .from('complaints')
-      .update({ status: 'resolved' }) // Novo status 'resolved'
-      .eq('id', complaintId);
+    try {
+        // 2. Atualiza o status para 'resolved' no banco de dados
+        const { error } = await supabase
+          .from('complaints')
+          .update({ status: 'resolved' }) // Status 'resolved'
+          .eq('id', complaintId);
 
-    if (error) {
-      toast.error('Erro ao marcar como resolvido.', { id: toastId });
-      // Reverte a atualização otimista em caso de erro
-      fetchComplaints();
-    } else {
-      toast.success('Reclamação marcada como resolvida e dispensada.', { id: toastId });
+        if (error) {
+            throw error;
+        }
+        
+        // O evento de UPDATE no DB acionará o useEffect, que chamará fetchComplaints,
+        // garantindo a sincronização.
+        toast.success('Reclamação marcada como resolvida e dispensada.', { id: toastId });
+
+    } catch (error) {
+        console.error('Erro ao resolver reclamação:', error);
+        toast.error('Erro ao marcar como resolvido. Recarregando lista.', { id: toastId });
+        // Reverte a atualização otimista em caso de erro, recarregando
+        fetchComplaints();
     }
   };
   
@@ -189,7 +190,6 @@ const RepairNotificationIcon: React.FC = () => {
                   </button>
                 </div>
               ))}
-              {/* Botão Gerenciar Reparos removido */}
             </div>
           ) : (
             <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">
