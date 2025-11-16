@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bell, Wrench, X, Loader2 } from 'lucide-react';
+import { Bell, Wrench, X, Loader2, Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover';
 import { Button } from '../ui/Button';
 import { supabase } from '../../services/supabase';
@@ -44,14 +44,19 @@ const ComplaintBell: React.FC = () => {
       toast.error('Falha ao carregar reclamações pendentes.');
       setComplaints([]);
     } else {
-      const formattedData: ComplaintNotification[] = data.map(c => ({
-        id: c.id,
-        apartment_number: c.apartment_number,
-        category: c.category,
-        description: c.description,
-        tenant_id: c.tenant_id,
-        tenant_name: c.tenant?.full_name || 'Inquilino Desconhecido',
-      }));
+      const formattedData: ComplaintNotification[] = data.map(c => {
+        // Supabase retorna a junção como um array, mesmo que seja um único registro
+        const tenantProfile = Array.isArray(c.tenant) ? c.tenant[0] : c.tenant;
+        
+        return {
+          id: c.id,
+          apartment_number: c.apartment_number,
+          category: c.category,
+          description: c.description,
+          tenant_id: c.tenant_id,
+          tenant_name: tenantProfile?.full_name || 'Inquilino Desconhecido',
+        };
+      });
       setComplaints(formattedData);
     }
     setLoading(false);
@@ -86,7 +91,7 @@ const ComplaintBell: React.FC = () => {
   const handleNavigate = () => {
     setIsOpen(false);
     // TODO: Criar uma página de gerenciamento de reclamações e navegar para lá
-    toast.info('Navegação para a página de Reclamações (em desenvolvimento).');
+    toast('Navegação para a página de Reclamações (em desenvolvimento).', { icon: <Info className="w-5 h-5 text-blue-500" /> });
   };
 
   const handleMarkAsViewed = async (complaintId: string) => {
