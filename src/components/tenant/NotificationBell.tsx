@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bell, X, Loader2, Info, AlertTriangle } from 'lucide-react';
+import { Bell, X, Loader2, Info, AlertTriangle, Trash2, MessageSquare } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import toast from 'react-hot-toast';
 
 interface Notification {
   id: string;
@@ -18,6 +19,7 @@ interface Notification {
 const iconMap: { [key: string]: React.ElementType } = {
   Info: Info,
   AlertTriangle: AlertTriangle,
+  MessageSquare: MessageSquare,
   Default: Bell,
 };
 
@@ -71,19 +73,46 @@ const NotificationBell: React.FC = () => {
     };
   }, [user, fetchNotifications]);
 
-  const handleMarkAsRead = async (notificationId: string) => {
-    setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
-    
+  const handleMarkAsRead = async () => {
+    if (!user) return;
+    const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+    if (unreadIds.length === 0) return;
+
+    // Otimista
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
     await supabase
       .from('notifications')
       .update({ read: true })
+      .in('id', unreadIds);
+  };
+
+  const handleDeleteNotification = async (notificationId: string) => {
+    // Otimista
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
       .eq('id', notificationId);
+    
+    if (error) {
+        toast.error("Falha ao apagar a notificação.");
+        fetchNotifications(); // Reverte em caso de erro
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
+      handleMarkAsRead();
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
           className="relative p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
@@ -123,15 +152,13 @@ const NotificationBell: React.FC = () => {
                         {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: ptBR })}
                       </p>
                     </div>
-                    {!n.read && (
-                      <button
-                        onClick={() => handleMarkAsRead(n.id)}
-                        className="p-1 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full transition-colors flex-shrink-0 ml-2"
-                        title="Marcar como lido"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleDeleteNotification(n.id)}
+                      className="p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full transition-colors flex-shrink-0 ml-2"
+                      title="Apagar notificação"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 );
               })}
