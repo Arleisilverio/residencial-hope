@@ -75,6 +75,7 @@ serve(async (req) => {
         payment_request_pending: false,
         amount_paid: null,
         remaining_balance: null,
+        monthly_rent: null, // Limpa o valor do aluguel anterior
       })
       .eq('tenant_id', tenantId);
 

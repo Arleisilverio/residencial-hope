@@ -12,7 +12,7 @@ interface ApartmentCardProps {
 }
 
 const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView, onAddTenant, onDelete }) => {
-  const { number, tenant, pending_complaints_count = 0, payment_request_pending } = apartment;
+  const { number, tenant, status, pending_complaints_count = 0, payment_request_pending } = apartment;
   const [isImageOpen, setIsImageOpen] = useState(false);
 
   const hasPendingComplaints = pending_complaints_count > 0;
@@ -21,7 +21,11 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
     return aptNumber >= 1 && aptNumber <= 6 ? 1600 : 1800;
   };
 
-  const monthly_rent = apartment.monthly_rent || getMonthlyRent(number);
+  // Lógica corrigida: se o apartamento estiver ocupado, usa o valor do aluguel salvo.
+  // Se estiver vago, usa o valor padrão com base no número do kit.
+  const monthly_rent = status === 'occupied' && apartment.monthly_rent
+    ? apartment.monthly_rent
+    : getMonthlyRent(number);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Não informado';
