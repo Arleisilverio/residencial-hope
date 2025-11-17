@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeToggleButton from '../common/ThemeToggleButton';
+import NotificationBell from '../tenant/NotificationBell'; // Importando o novo componente
 
 interface TenantLayoutProps {
   children: ReactNode;
@@ -33,6 +34,7 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
               <h1 className="text-xl font-bold text-slate-800 dark:text-slate-200">Condomínio Hope - Inquilino</h1>
             </div>
             <div className="flex items-center space-x-2">
+              <NotificationBell /> {/* Adicionando o sino de notificação */}
               <ThemeToggleButton />
               <button
                 onClick={handleLogout}

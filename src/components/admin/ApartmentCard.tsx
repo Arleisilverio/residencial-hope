@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Apartment } from '../../types';
-import { User, Mail, Phone, Calendar, DollarSign, Pencil, Eye, UserPlus, AlertTriangle, Bell, Trash2 } from 'lucide-react';
+import { User, Mail, Phone, Calendar, DollarSign, Pencil, Eye, UserPlus, AlertTriangle, Bell, Trash2, MessageSquare } from 'lucide-react';
 import ImageViewerDialog from '../common/ImageViewerDialog';
 
 interface ApartmentCardProps {
@@ -9,9 +9,10 @@ interface ApartmentCardProps {
   onView: (tenantId: string) => void;
   onAddTenant: () => void;
   onDelete: (apartment: Apartment) => void;
+  onSendMessage: (apartment: Apartment) => void; // Nova prop
 }
 
-const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView, onAddTenant, onDelete }) => {
+const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView, onAddTenant, onDelete, onSendMessage }) => {
   const { number, tenant, status, pending_complaints_count = 0, payment_request_pending } = apartment;
   const [isImageOpen, setIsImageOpen] = useState(false);
 
@@ -21,8 +22,6 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
     return aptNumber >= 1 && aptNumber <= 6 ? 1600 : 1800;
   };
 
-  // Lógica corrigida: se o apartamento estiver ocupado, usa o valor do aluguel salvo.
-  // Se estiver vago, usa o valor padrão com base no número do kit.
   const monthly_rent = status === 'occupied' && apartment.monthly_rent
     ? apartment.monthly_rent
     : getMonthlyRent(number);
@@ -62,6 +61,13 @@ const ApartmentCard: React.FC<ApartmentCardProps> = ({ apartment, onEdit, onView
 
             {tenant ? (
               <>
+                <button
+                  onClick={() => onSendMessage(apartment)}
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                  title="Enviar Mensagem"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </button>
                 <button
                   onClick={() => onView(tenant.id)}
                   className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
