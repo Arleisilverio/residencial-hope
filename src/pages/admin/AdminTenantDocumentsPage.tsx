@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAdminDocumentManager } from '../../hooks/useAdminDocumentManager';
 import { Button } from '../../components/ui/Button';
@@ -9,7 +9,6 @@ import { ptBR } from 'date-fns/locale';
 const AdminTenantDocumentsPage: React.FC = () => {
   const { tenantId } = useParams<{ tenantId: string }>();
   const { documents, isLoading, isUploading, uploadDocument, deleteDocument, createSignedUrlForDownload } = useAdminDocumentManager(tenantId);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -17,13 +16,10 @@ const AdminTenantDocumentsPage: React.FC = () => {
     if (file) {
       uploadDocument(file);
     }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    // Limpa o valor para permitir o reenvio do mesmo arquivo
+    if (event.target) {
+      event.target.value = '';
     }
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
   };
 
   const handleDownload = async (fileName: string) => {
@@ -60,16 +56,19 @@ const AdminTenantDocumentsPage: React.FC = () => {
             <h1 className="text-xl font-semibold text-slate-800 dark:text-slate-200">
               Gerenciar Documentos
             </h1>
-            <Button onClick={handleUploadClick} disabled={isUploading}>
-              {isUploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UploadCloud className="w-4 h-4 mr-2" />}
-              {isUploading ? 'Enviando...' : 'Enviar Arquivo'}
+            <Button asChild disabled={isUploading} className="cursor-pointer">
+              <label htmlFor="admin-doc-upload">
+                {isUploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UploadCloud className="w-4 h-4 mr-2" />}
+                {isUploading ? 'Enviando...' : 'Enviar Arquivo'}
+              </label>
             </Button>
             <input
+              id="admin-doc-upload"
               type="file"
-              ref={fileInputRef}
               onChange={handleFileChange}
               className="hidden"
               disabled={isUploading}
+              accept="application/pdf,image/jpeg,image/png"
             />
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { useDocumentUpload } from '../../hooks/useDocumentUpload';
 import { Button } from '../ui/Button';
 import { File, UploadCloud, Trash2, Loader2, FolderOpen } from 'lucide-react';
@@ -7,20 +7,16 @@ import { ptBR } from 'date-fns/locale';
 
 const DocumentUploader: React.FC = () => {
   const { documents, isLoading, isUploading, uploadDocument, deleteDocument } = useDocumentUpload();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       uploadDocument(file);
     }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    // Limpa o valor para permitir o reenvio do mesmo arquivo
+    if (event.target) {
+      event.target.value = '';
     }
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
   };
 
   const formatFileSize = (bytes: number) => {
@@ -38,17 +34,19 @@ const DocumentUploader: React.FC = () => {
           <FolderOpen className="w-5 h-5 mr-2 text-slate-500 dark:text-slate-400" />
           Meus Documentos
         </h2>
-        <Button onClick={handleUploadClick} disabled={isUploading}>
-          {isUploading ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <UploadCloud className="w-4 h-4 mr-2" />
-          )}
-          {isUploading ? 'Enviando...' : 'Enviar Arquivo'}
+        <Button asChild disabled={isUploading} className="cursor-pointer">
+          <label htmlFor="tenant-doc-upload">
+            {isUploading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <UploadCloud className="w-4 h-4 mr-2" />
+            )}
+            {isUploading ? 'Enviando...' : 'Enviar Arquivo'}
+          </label>
         </Button>
         <input
+          id="tenant-doc-upload"
           type="file"
-          ref={fileInputRef}
           onChange={handleFileChange}
           className="hidden"
           disabled={isUploading}
