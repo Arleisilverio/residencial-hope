@@ -56,9 +56,17 @@ const SentMessages: React.FC<{ refreshTrigger: number }> = ({ refreshTrigger }) 
 
   const StatusIcon = ({ status }: { status: Complaint['status'] }) => {
     if (status === 'in_progress') {
-      return <CheckCheck className="w-4 h-4 text-blue-500" title="Visto pelo administrador" />;
+      return (
+        <span title="Visto pelo administrador">
+          <CheckCheck className="w-4 h-4 text-blue-500" />
+        </span>
+      );
     }
-    return <Check className="w-4 h-4 text-slate-400" title="Enviado" />;
+    return (
+      <span title="Enviado">
+        <Check className="w-4 h-4 text-slate-400" />
+      </span>
+    );
   };
 
   return (
