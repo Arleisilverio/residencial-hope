@@ -6,7 +6,6 @@ import ApartmentCard from '../../components/admin/ApartmentCard';
 import AddTenantDialog from '../../components/admin/AddTenantDialog';
 import EditTenantDialog from '../../components/admin/EditTenantDialog';
 import DeleteTenantDialog from '../../components/admin/DeleteTenantDialog';
-import SendMessageDialog from '../../components/admin/SendMessageDialog'; // Importando o novo diálogo
 
 const AdminDashboardPage: React.FC = () => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -16,7 +15,6 @@ const AdminDashboardPage: React.FC = () => {
   const [apartmentToAdd, setApartmentToAdd] = useState<number | null>(null);
   const [editingApartment, setEditingApartment] = useState<Apartment | null>(null);
   const [deletingApartment, setDeletingApartment] = useState<Apartment | null>(null);
-  const [messagingApartment, setMessagingApartment] = useState<Apartment | null>(null); // Novo estado
   const navigate = useNavigate();
 
   const fetchApartments = useCallback(async () => {
@@ -176,7 +174,6 @@ const AdminDashboardPage: React.FC = () => {
                 onView={handleViewTenant}
                 onAddTenant={() => handleOpenAddTenant(apt.number)}
                 onDelete={setDeletingApartment}
-                onSendMessage={setMessagingApartment} // Passando a função
               />
             ))}
           </div>
@@ -200,12 +197,6 @@ const AdminDashboardPage: React.FC = () => {
         onClose={() => setDeletingApartment(null)}
         onSuccess={handleTenantDeleted}
         apartment={deletingApartment}
-      />
-      <SendMessageDialog
-        isOpen={!!messagingApartment}
-        onClose={() => setMessagingApartment(null)}
-        onSuccess={() => {}}
-        tenant={messagingApartment?.tenant || null}
       />
     </>
   );
