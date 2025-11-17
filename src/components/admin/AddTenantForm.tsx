@@ -4,11 +4,8 @@ import { Apartment } from '../../types';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import toast from 'react-hot-toast';
-import { Copy, RefreshCw, Calendar as CalendarIcon } from 'lucide-react';
-import { Calendar } from '../ui/Calendar';
-import { Popover, PopoverTrigger, PopoverContent } from '../ui/Popover';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Copy, RefreshCw } from 'lucide-react';
+import SimpleDatePicker from '../ui/SimpleDatePicker'; // Importando o novo componente
 import { cn, formatPhoneNumber, formatFullName, formatEmail } from '../../lib/utils';
 import {
   Select,
@@ -30,7 +27,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [apartmentNumber, setApartmentNumber] = useState<number | ''>(preSelectedApartmentNumber || '');
-  const [moveInDate, setMoveInDate] = useState<Date | undefined>(new Date());
+  const [moveInDate, setMoveInDate] = useState<Date>(new Date()); // Estado agora é apenas Date
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -179,28 +176,8 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
           )}
         </div>
         <div>
-          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Data de Entrada</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !moveInDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {moveInDate ? format(moveInDate, "dd/MM/yyyy") : <span>Escolha uma data</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 border bg-popover">
-              <Calendar
-                mode="single"
-                selected={moveInDate}
-                onSelect={setMoveInDate}
-              />
-            </PopoverContent>
-          </Popover>
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1">Data de Entrada</label>
+          <SimpleDatePicker value={moveInDate} onSelect={setMoveInDate} />
         </div>
       </div>
       <div className="flex justify-end pt-4">
