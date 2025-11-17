@@ -8,30 +8,42 @@ interface FinancialChartProps {
   transactions: Transaction[];
 }
 
+// Helper array for correct month sorting
+const monthOrder = [
+  'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+  'jul', 'ago', 'set', 'out', 'nov', 'dez'
+];
+
 const FinancialChart: React.FC<FinancialChartProps> = ({ transactions }) => {
   const chartData = useMemo(() => {
     const monthlyData: { [key: string]: { name: string; revenue: number; expense: number } } = {};
 
     transactions.forEach(t => {
-      const month = format(parseISO(t.transaction_date), 'MMM/yy', { locale: ptBR });
-      if (!monthlyData[month]) {
-        monthlyData[month] = { name: month, revenue: 0, expense: 0 };
+      // Format to 'mmm/yy' and remove the dot that pt-BR locale sometimes adds (e.g., 'mai.')
+      const monthName = format(parseISO(t.transaction_date), 'MMM', { locale: ptBR }).replace('.', '');
+      const year = format(parseISO(t.transaction_date), 'yy');
+      const monthKey = `${monthName}/${year}`;
+
+      if (!monthlyData[monthKey]) {
+        monthlyData[monthKey] = { name: monthKey, revenue: 0, expense: 0 };
       }
       if (t.type === 'revenue') {
-        monthlyData[month].revenue += t.amount;
+        monthlyData[monthKey].revenue += t.amount;
       } else {
-        monthlyData[month].expense += t.amount;
+        monthlyData[monthKey].expense += t.amount;
       }
     });
 
-    // Ordena os dados por data para exibir corretamente no gráfico
+    // Sort the data chronologically using the helper array
     return Object.values(monthlyData).sort((a, b) => {
-        const [aMonth, aYear] = a.name.split('/');
-        const [bMonth, bYear] = b.name.split('/');
-        const aDate = new Date(parseInt(`20${aYear}`), ptBR.localize?.month(ptBR.months.findIndex(m => m.slice(0,3) === aMonth), {width: 'abbreviated'}));
-        const bDate = new Date(parseInt(`20${bYear}`), ptBR.localize?.month(ptBR.months.findIndex(m => m.slice(0,3) === bMonth), {width: 'abbreviated'}));
+        const [aMonthStr, aYear] = a.name.split('/');
+        const [bMonthStr, bYear] = b.name.split('/');
+
+        const aDate = new Date(parseInt(`20${aYear}`), monthOrder.indexOf(aMonthStr.toLowerCase()));
+        const bDate = new Date(parseInt(`20${bYear}`), monthOrder.indexOf(bMonthStr.toLowerCase()));
+        
         return aDate.getTime() - bDate.getTime();
-    }).slice(-12); // Mostra os últimos 12 meses
+    }).slice(-12); // Show the last 12 months
   }, [transactions]);
 
   const formatCurrency = (value: number) => {
