@@ -131,14 +131,17 @@ const AdminDashboardPage: React.FC = () => {
 
   const handleTenantAdded = () => {
     handleCloseAddTenant();
+    fetchApartments(); // Recarrega a lista
   };
 
   const handleTenantUpdated = () => {
     setEditingApartment(null);
+    fetchApartments(); // Recarrega a lista
   };
 
   const handleTenantDeleted = () => {
     setDeletingApartment(null);
+    fetchApartments(); // Recarrega a lista
   };
 
   const handleViewTenant = (tenantId: string) => {
