@@ -70,8 +70,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     setLoading(true);
     const toastId = toast.loading('Cadastrando inquilino...');
 
-    const monthlyRent = apartmentNumber >= 1 && apartmentNumber <= 6 ? 1600 : 1800;
-
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -91,18 +89,10 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       return;
     }
 
+    // A função do Supabase (trigger) agora cuida de atualizar o apartamento,
+    // incluindo o valor do aluguel e a data de vencimento.
     if (authData.user) {
-      const { error: updateError } = await supabase
-        .from('apartments')
-        .update({ monthly_rent: monthlyRent })
-        .eq('number', apartmentNumber);
-
-      if (updateError) {
-        toast.error(`Usuário criado, mas falha ao atualizar aluguel: ${updateError.message}`, { id: toastId });
-      } else {
-        toast.success('Inquilino cadastrado com sucesso!', { id: toastId });
-      }
-      
+      toast.success('Inquilino cadastrado com sucesso!', { id: toastId });
       onSuccess();
     }
     
