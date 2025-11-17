@@ -35,9 +35,11 @@ const TransactionListItem: React.FC<TransactionListItemProps> = ({ transaction, 
       <div className="flex items-center space-x-2 sm:space-x-4 ml-4">
         <p className={`text-lg font-bold ${amountColor}`}>{formatCurrency(transaction.amount)}</p>
         <div className="flex items-center">
-          <button onClick={() => onEdit(transaction)} className="p-2 text-slate-500 hover:text-blue-600 rounded-full transition-colors">
-            <Edit className="w-4 h-4" />
-          </button>
+          {!isRevenue && (
+            <button onClick={() => onEdit(transaction)} className="p-2 text-slate-500 hover:text-blue-600 rounded-full transition-colors">
+              <Edit className="w-4 h-4" />
+            </button>
+          )}
           <button onClick={() => onDelete(transaction.id)} className="p-2 text-slate-500 hover:text-red-600 rounded-full transition-colors">
             <Trash2 className="w-4 h-4" />
           </button>

@@ -31,7 +31,7 @@ const FinancialDashboardPage: React.FC = () => {
   };
 
   const handleSuccess = () => {
-    toast.success(`Transação ${transactionToEdit ? 'atualizada' : 'adicionada'} com sucesso!`);
+    toast.success(`Despesa ${transactionToEdit ? 'atualizada' : 'adicionada'} com sucesso!`);
   };
 
   const handleDelete = async (id: string) => {
@@ -91,7 +91,7 @@ const FinancialDashboardPage: React.FC = () => {
             </h1>
             <Button onClick={handleOpenAddDialog}>
               <PlusCircle className="w-4 h-4 mr-2" />
-              Adicionar Transação
+              Adicionar Despesa
             </Button>
           </div>
 

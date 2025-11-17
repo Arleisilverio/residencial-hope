@@ -25,7 +25,6 @@ const expenseCategories = [
 const TransactionFormDialog: React.FC<TransactionFormDialogProps> = ({
   isOpen, onClose, onSuccess, transactionToEdit, addTransaction, updateTransaction
 }) => {
-  const [type, setType] = useState<'revenue' | 'expense'>('expense');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -35,14 +34,12 @@ const TransactionFormDialog: React.FC<TransactionFormDialogProps> = ({
   useEffect(() => {
     if (isOpen) {
       if (transactionToEdit) {
-        setType(transactionToEdit.type);
         setAmount(String(transactionToEdit.amount));
         setDescription(transactionToEdit.description);
         setCategory(transactionToEdit.category || '');
         setTransactionDate(new Date(transactionToEdit.transaction_date));
       } else {
         // Reset form for new transaction
-        setType('expense');
         setAmount('');
         setDescription('');
         setCategory('');
@@ -56,10 +53,10 @@ const TransactionFormDialog: React.FC<TransactionFormDialogProps> = ({
     setLoading(true);
 
     const transactionData = {
-      type,
+      type: 'expense' as const, // O tipo é sempre 'expense'
       amount: parseFloat(amount),
       description,
-      category: type === 'revenue' ? 'Receita de Aluguel' : category,
+      category,
       transaction_date: transactionDate.toISOString(),
     };
 
@@ -79,51 +76,38 @@ const TransactionFormDialog: React.FC<TransactionFormDialogProps> = ({
   };
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose} title={transactionToEdit ? 'Editar Transação' : 'Adicionar Transação'}>
+    <Dialog isOpen={isOpen} onClose={onClose} title={transactionToEdit ? 'Editar Despesa' : 'Adicionar Despesa'}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium">Tipo</label>
-            <Select value={type} onValueChange={(v) => setType(v as 'revenue' | 'expense')} required>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="expense">Despesa</SelectItem>
-                <SelectItem value="revenue">Receita</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div>
             <label className="text-sm font-medium">Valor (R$)</label>
             <Input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" required />
           </div>
+          <div>
+            <label className="text-sm font-medium block mb-1">Data da Transação</label>
+            <SimpleDatePicker value={transactionDate} onSelect={setTransactionDate} />
+          </div>
         </div>
         
-        {type === 'expense' && (
-          <div>
-            <label className="text-sm font-medium">Categoria</label>
-            <Select value={category} onValueChange={setCategory} required>
-              <SelectTrigger><SelectValue placeholder="Selecione uma categoria..." /></SelectTrigger>
-              <SelectContent>
-                {expenseCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div>
+          <label className="text-sm font-medium">Categoria</label>
+          <Select value={category} onValueChange={setCategory} required>
+            <SelectTrigger><SelectValue placeholder="Selecione uma categoria..." /></SelectTrigger>
+            <SelectContent>
+              {expenseCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
 
         <div>
           <label className="text-sm font-medium">Descrição</label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ex: Compra de material de limpeza" required />
         </div>
 
-        <div>
-          <label className="text-sm font-medium">Data da Transação</label>
-          <SimpleDatePicker value={transactionDate} onSelect={setTransactionDate} />
-        </div>
-
         <div className="flex justify-end pt-4">
           <Button type="submit" disabled={loading}>
             <Save className="w-4 h-4 mr-2" />
-            {loading ? 'Salvando...' : 'Salvar'}
+            {loading ? 'Salvando...' : 'Salvar Despesa'}
           </Button>
         </div>
       </form>
