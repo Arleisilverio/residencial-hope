@@ -37,7 +37,7 @@ const SimpleDatePicker: React.FC<SimpleDatePickerProps> = ({ value, onSelect }) 
   const selectClassName = "w-full p-2 border border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-col sm:flex-row gap-2">
       <div className="flex-1">
         <label htmlFor="day-select" className="sr-only">Dia</label>
         <select id="day-select" value={day} onChange={(e) => setDay(e.target.value)} className={selectClassName}>
