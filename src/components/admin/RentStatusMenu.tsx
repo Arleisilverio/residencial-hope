@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover';
 interface RentStatusMenuProps {
   apartmentNumber: number;
   tenantId: string;
+  rentAmount: number;
   currentStatus: RentStatus;
   onStatusChange: () => void; // Recarga global
   onLocalStatusChange: (newStatus: RentStatus) => void; // Atualização otimista local
@@ -21,7 +22,7 @@ const statusOptions: { value: RentStatus; label: string; icon: React.ElementType
   { value: 'overdue', label: 'Atrasado', icon: XCircle, color: 'text-red-600 bg-red-100' },
 ];
 
-const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenantId, currentStatus, onStatusChange, onLocalStatusChange, onOpenPartialPayment }) => {
+const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenantId, rentAmount, currentStatus, onStatusChange, onLocalStatusChange, onOpenPartialPayment }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -45,6 +46,23 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
     }
   };
 
+  const createRevenueTransaction = async (aptNumber: number, amount: number) => {
+    const { error } = await supabase
+      .from('transactions')
+      .insert({
+        type: 'revenue',
+        category: 'Receita de Aluguel',
+        description: `Recebimento de Aluguel - Kit ${String(aptNumber).padStart(2, '0')}`,
+        amount: amount,
+        transaction_date: new Date().toISOString(),
+      });
+    
+    if (error) {
+      console.error('Erro ao criar transação de receita:', error);
+      toast.error('Falha ao registrar a receita no painel financeiro.');
+    }
+  };
+
   const handleUpdateStatus = async (newStatus: RentStatus) => {
     if (newStatus === currentStatus) {
       setIsMenuOpen(false);
@@ -52,13 +70,11 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
     }
     
     if (newStatus === 'partial') {
-        // Se for parcial, abrimos o diálogo e a atualização do DB é feita lá.
         setIsMenuOpen(false);
         onOpenPartialPayment();
         return;
     }
 
-    // 1. Atualização otimista local
     onLocalStatusChange(newStatus);
     setIsMenuOpen(false); 
 
@@ -66,13 +82,11 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
     const toastId = toast.loading(`Atualizando Kit ${String(apartmentNumber).padStart(2, '0')}...`);
 
     try {
-        // 2. Atualização no banco de dados
         const updatePayload: any = { 
             rent_status: newStatus,
-            payment_request_pending: false // Limpa a flag de solicitação de pagamento
+            payment_request_pending: false
         };
 
-        // Como o status não é 'partial' (tratado anteriormente), limpamos os campos de pagamento parcial
         updatePayload.amount_paid = null;
         updatePayload.remaining_balance = null;
 
@@ -81,20 +95,21 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
           .update(updatePayload)
           .eq('number', apartmentNumber);
 
-        if (updateError) {
-          throw updateError;
+        if (updateError) throw updateError;
+        
+        // Se o status for 'pago', cria a transação de receita
+        if (newStatus === 'paid') {
+          await createRevenueTransaction(apartmentNumber, rentAmount);
         }
         
-        // 3. Enviar notificação ao inquilino
         await sendNotification(newStatus, apartmentNumber);
 
-        toast.success(`Status do Kit ${String(apartmentNumber).padStart(2, '0')} atualizado para ${statusOptions.find(s => s.value === newStatus)?.label}!`, { id: toastId });
+        toast.success(`Status do Kit ${String(apartmentNumber).padStart(2, '0')} atualizado!`, { id: toastId });
         
     } catch (error) {
         console.error('Update error:', error);
         toast.error(`Erro ao atualizar status: ${error instanceof Error ? error.message : 'Erro desconhecido'}`, { id: toastId });
     } finally {
-        // 4. Recarga global para sincronizar todos os dados (e reverter se houver erro)
         onStatusChange(); 
         setIsUpdating(false);
     }
@@ -121,7 +136,6 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
           {statusOptions.map((option) => {
             const isSelected = option.value === currentStatus;
             
-            // Define a cor do círculo de status
             let circleColor = 'bg-gray-400';
             if (option.value === 'paid') circleColor = 'bg-green-500';
             else if (option.value === 'pending') circleColor = 'bg-yellow-500';

@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, PlusCircle, TrendingUp, TrendingDown, DollarSign, Loader2 } from 'lucide-react';
+import { ArrowLeft, PlusCircle, TrendingUp, TrendingDown, DollarSign, Loader2, BarChart2 } from 'lucide-react';
 import { useTransactions } from '../../hooks/useTransactions';
 import { Transaction } from '../../types';
 import TransactionFormDialog from '../../components/admin/TransactionFormDialog';
 import TransactionListItem from '../../components/admin/TransactionListItem';
+import FinancialChart from '../../components/admin/FinancialChart';
 import { Button } from '../../components/ui/Button';
 import { startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -34,7 +35,7 @@ const FinancialDashboardPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta transação?')) {
+    if (window.confirm('Tem certeza que deseja excluir esta transação? Esta ação é irreversível.')) {
       const toastId = toast.loading('Excluindo transação...');
       try {
         await deleteTransaction(id);
@@ -119,6 +120,21 @@ const FinancialDashboardPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Gráfico Financeiro */}
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg mb-8">
+            <h2 className="p-4 text-lg font-semibold border-b border-slate-200 dark:border-slate-700 flex items-center">
+              <BarChart2 className="w-5 h-5 mr-2" />
+              Resumo Visual Mensal
+            </h2>
+            <div className="p-4">
+              {loading ? (
+                <div className="text-center p-10"><Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" /></div>
+              ) : (
+                <FinancialChart transactions={transactions} />
+              )}
+            </div>
+          </div>
+
           {/* Lista de Transações */}
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg">
             <h2 className="p-4 text-lg font-semibold border-b border-slate-200 dark:border-slate-700">Histórico de Transações</h2>
@@ -129,7 +145,7 @@ const FinancialDashboardPage: React.FC = () => {
             ) : (
               <div className="divide-y divide-slate-200 dark:divide-slate-700">
                 {transactions.map(t => (
-                  <TransactionListItem key={t.id} transaction={t} onEdit={handleOpenEditDialog} onDelete={handleDelete} />
+                  <TransactionListItem key={t.id} transaction={t} onEdit={handleOpenEditDialog} onDelete={() => handleDelete(t.id)} />
                 ))}
               </div>
             )}
