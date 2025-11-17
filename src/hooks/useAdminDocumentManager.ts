@@ -2,8 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabase';
 import toast from 'react-hot-toast';
 import { FileObject } from '@supabase/storage-js';
+import { sanitizeFileName } from '../lib/utils';
 
 const BUCKET_NAME = 'documents';
+const ACCEPTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export const useAdminDocumentManager = (tenantId: string | undefined) => {
   const [documents, setDocuments] = useState<FileObject[]>([]);
@@ -41,10 +44,19 @@ export const useAdminDocumentManager = (tenantId: string | undefined) => {
       toast.error('ID do inquilino não encontrado.');
       return;
     }
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('O arquivo é muito grande. O limite é de 5MB.');
+      return;
+    }
+    if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+      toast.error('Formato de arquivo não suportado. Use PDF, JPG ou PNG.');
+      return;
+    }
 
     setIsUploading(true);
     const toastId = toast.loading(`Enviando ${file.name}...`);
-    const filePath = `${tenantId}/${file.name}`;
+    const sanitizedFileName = sanitizeFileName(file.name);
+    const filePath = `${tenantId}/${sanitizedFileName}`;
 
     try {
       const { error } = await supabase.storage
