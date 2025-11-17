@@ -35,3 +35,14 @@ export interface Complaint {
   status: 'new' | 'in_progress' | 'resolved';
   created_at: string;
 }
+
+export interface Transaction {
+  id: string;
+  type: 'revenue' | 'expense';
+  category: string;
+  description: string;
+  amount: number;
+  transaction_date: string;
+  receipt_url?: string;
+  created_at: string;
+}

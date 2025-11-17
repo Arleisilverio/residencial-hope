@@ -1,7 +1,7 @@
 import React, { ReactNode, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogOut, DollarSign, FolderOpen } from 'lucide-react';
+import { LogOut, DollarSign, FolderOpen, BarChart2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeToggleButton from '../common/ThemeToggleButton';
 import PaymentRequestBell from '../admin/PaymentRequestBell';
@@ -61,13 +61,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <FolderOpen className="w-5 h-5" />
               </Link>
 
-              {/* Botão de Gerenciamento Financeiro */}
+              {/* Botão de Gerenciamento Financeiro (Aluguéis) */}
               <Link
                 to="/admin/financeiro"
                 className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
-                title="Gerenciamento Financeiro"
+                title="Gerenciamento de Aluguéis"
               >
                 <DollarSign className="w-5 h-5" />
+              </Link>
+
+              {/* Botão de Receitas e Despesas */}
+              <Link
+                to="/admin/financial-dashboard"
+                className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                title="Receitas e Despesas"
+              >
+                <BarChart2 className="w-5 h-5" />
               </Link>
               
               {/* Botão de Tema */}
