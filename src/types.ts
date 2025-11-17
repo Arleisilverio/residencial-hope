@@ -24,3 +24,14 @@ export interface Apartment {
   amount_paid: number | null; // Novo campo para pagamento parcial
   remaining_balance: number | null; // Novo campo para saldo restante
 }
+
+export interface Complaint {
+  id: string;
+  tenant_id: string;
+  apartment_number: number | null;
+  category: string;
+  description: string;
+  attachments?: string[];
+  status: 'new' | 'in_progress' | 'resolved';
+  created_at: string;
+}

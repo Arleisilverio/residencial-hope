@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Apartment, RentStatus } from '../../types';
 import { supabase } from '../../services/supabase';
-import { DollarSign, Home, Mail, Phone, Calendar, Wrench, Bell, CalendarClock, X, Loader2 } from 'lucide-react';
+import { DollarSign, Home, Mail, Phone, Calendar, Wrench, Bell, CalendarClock, X, Loader2, MessageSquare } from 'lucide-react';
 import AvatarUploader from '../../components/tenant/AvatarUploader';
 import StatusBadge from '../../components/common/StatusBadge'; 
 import { Button } from '../../components/ui/Button';
@@ -10,15 +10,19 @@ import ComplaintFormDialog from '../../components/tenant/ComplaintFormDialog';
 import toast from 'react-hot-toast';
 import { differenceInDays, startOfDay } from 'date-fns';
 import DocumentUploader from '../../components/tenant/DocumentUploader';
+import TenantMessageDialog from '../../components/tenant/TenantMessageDialog';
+import SentMessages from '../../components/tenant/SentMessages';
 
 const TenantDashboardPage: React.FC = () => {
   const { profile } = useAuth();
   const [apartment, setApartment] = useState<Apartment | null>(null);
   const [loadingApartment, setLoadingApartment] = useState(true);
   const [isComplaintDialogOpen, setIsComplaintDialogOpen] = useState(false);
+  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [isDueDateAlertVisible, setIsDueDateAlertVisible] = useState(true);
   const [daysUntilDue, setDaysUntilDue] = useState<number | null>(null);
-  const [isRequestingPayment, setIsRequestingPayment] = useState(false); // Novo estado
+  const [isRequestingPayment, setIsRequestingPayment] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const fetchApartmentDetails = useCallback(async () => {
     if (!profile?.apartment_number) {
@@ -40,7 +44,6 @@ const TenantDashboardPage: React.FC = () => {
     setLoadingApartment(false);
   }, [profile]);
 
-  // Efeito para calcular o alerta de vencimento
   useEffect(() => {
     if (apartment?.next_due_date && apartment.rent_status !== 'paid') {
       const today = startOfDay(new Date());
@@ -67,7 +70,7 @@ const TenantDashboardPage: React.FC = () => {
         return;
     }
 
-    setIsRequestingPayment(true); // Inicia o carregamento
+    setIsRequestingPayment(true);
     setApartment(prev => prev ? { ...prev, payment_request_pending: true } : null);
     const toastId = toast.loading('Enviando solicitação de pagamento...');
 
@@ -76,18 +79,15 @@ const TenantDashboardPage: React.FC = () => {
             body: { apartmentNumber: apartment.number },
         });
 
-        if (error) {
-            throw error;
-        }
+        if (error) throw error;
 
         toast.success('Solicitação de pagamento enviada ao administrador!', { id: toastId });
     } catch (error) {
         console.error('Error requesting payment:', error);
         toast.error('Falha ao enviar a solicitação de pagamento.', { id: toastId });
-        // Reverte o estado otimista se falhar
         setApartment(prev => prev ? { ...prev, payment_request_pending: false } : null);
     } finally {
-        setIsRequestingPayment(false); // Finaliza o carregamento
+        setIsRequestingPayment(false);
     }
   };
 
@@ -153,13 +153,22 @@ const TenantDashboardPage: React.FC = () => {
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
               <div className="flex justify-between items-center mb-6 border-b dark:border-slate-700 pb-3">
                 <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200">Meu Perfil</h2>
-                <button
-                  onClick={() => setIsComplaintDialogOpen(true)} 
-                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-full transition-colors"
-                  title="Solicitar Reparo / Manutenção"
-                >
-                  <Wrench className="w-5 h-5" />
-                </button>
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => setIsMessageDialogOpen(true)}
+                    className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-full transition-colors"
+                    title="Enviar Mensagem para Administração"
+                  >
+                    <MessageSquare className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setIsComplaintDialogOpen(true)} 
+                    className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-full transition-colors"
+                    title="Solicitar Reparo / Manutenção"
+                  >
+                    <Wrench className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
               
               <AvatarUploader profile={profile} />
@@ -249,34 +258,7 @@ const TenantDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
-              <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-4">Avisos e Ações Rápidas</h2>
-              <div className="space-y-3">
-                
-                {isDueDateAlertVisible && daysUntilDue !== null && (
-                  <div className="flex items-start justify-between p-3 bg-yellow-50 dark:bg-yellow-900/50 rounded-md border border-yellow-200 dark:border-yellow-800">
-                    <div className="flex items-center">
-                      <CalendarClock className="w-5 h-5 mr-3 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
-                      <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
-                        {getDueDateMessage(daysUntilDue)}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setIsDueDateAlertVisible(false)}
-                      className="p-1 -mt-1 -mr-1 text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-200 rounded-full"
-                      title="Dispensar aviso"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-md text-slate-600 dark:text-slate-400">
-                    <Bell className="w-4 h-4 mr-3" />
-                    <p className="text-sm">Verifique suas notificações para atualizações.</p>
-                </div>
-              </div>
-            </div>
+            <SentMessages refreshTrigger={refreshTrigger} />
 
             <DocumentUploader />
 
@@ -288,6 +270,11 @@ const TenantDashboardPage: React.FC = () => {
         isOpen={isComplaintDialogOpen}
         onClose={() => setIsComplaintDialogOpen(false)}
         onSuccess={() => { /* Nenhuma ação de recarga necessária aqui */ }}
+      />
+      <TenantMessageDialog
+        isOpen={isMessageDialogOpen}
+        onClose={() => setIsMessageDialogOpen(false)}
+        onSuccess={() => setRefreshTrigger(prev => prev + 1)}
       />
     </>
   );
