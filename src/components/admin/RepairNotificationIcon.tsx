@@ -49,7 +49,6 @@ const RepairNotificationIcon: React.FC = () => {
       setComplaints([]);
     } else {
       const formattedData: ComplaintNotification[] = data.map(c => {
-        // Supabase retorna a junção como um array, mesmo que seja um único registro
         const tenantProfile = Array.isArray(c.tenant) ? c.tenant[0] : c.tenant;
         
         return {
@@ -77,27 +76,14 @@ const RepairNotificationIcon: React.FC = () => {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*', // Escuta INSERT, UPDATE, DELETE
           schema: 'public',
           table: 'complaints',
-          filter: 'status=eq.new'
         },
         () => {
-          // Nova reclamação inserida, recarrega a lista
+          // Qualquer mudança na tabela de reclamações aciona a recarga.
+          // Isso garante que a lista esteja sempre sincronizada.
           fetchComplaints();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'complaints',
-        },
-        () => {
-            // Qualquer atualização (incluindo a mudança de status para 'resolved')
-            // aciona a recarga completa, garantindo que apenas 'new' sejam exibidas.
-            fetchComplaints();
         }
       )
       .subscribe();
@@ -107,30 +93,28 @@ const RepairNotificationIcon: React.FC = () => {
     };
   }, [fetchComplaints]);
 
-  const handleMarkAsResolved = async (complaintId: string, aptNumber: number) => {
+  const handleDeleteComplaint = async (complaintId: string, aptNumber: number) => {
     // 1. Atualização otimista da UI (remove imediatamente)
     setComplaints(prev => prev.filter(c => c.id !== complaintId));
 
-    const toastId = toast.loading(`Marcando Kit ${String(aptNumber).padStart(2, '0')} como resolvido...`);
+    const toastId = toast.loading(`Removendo solicitação do Kit ${String(aptNumber).padStart(2, '0')}...`);
 
     try {
-        // 2. Atualiza o status para 'resolved' no banco de dados
+        // 2. Exclui a reclamação do banco de dados
         const { error } = await supabase
           .from('complaints')
-          .update({ status: 'resolved' }) // Status 'resolved'
+          .delete()
           .eq('id', complaintId);
 
         if (error) {
             throw error;
         }
         
-        // O evento de UPDATE no DB acionará o useEffect, que chamará fetchComplaints,
-        // garantindo a sincronização.
-        toast.success('Reclamação marcada como resolvida e dispensada.', { id: toastId });
+        toast.success('Solicitação de reparo removida com sucesso.', { id: toastId });
 
     } catch (error) {
-        console.error('Erro ao resolver reclamação:', error);
-        toast.error('Erro ao marcar como resolvido. Recarregando lista.', { id: toastId });
+        console.error('Erro ao remover reclamação:', error);
+        toast.error('Erro ao remover solicitação. Recarregando lista.', { id: toastId });
         // Reverte a atualização otimista em caso de erro, recarregando
         fetchComplaints();
     }
@@ -182,7 +166,7 @@ const RepairNotificationIcon: React.FC = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => handleMarkAsResolved(c.id, c.apartment_number)}
+                    onClick={() => handleDeleteComplaint(c.id, c.apartment_number)}
                     className="p-1 text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full transition-colors flex-shrink-0 ml-2"
                     title="Marcar como resolvido e dispensar"
                   >
