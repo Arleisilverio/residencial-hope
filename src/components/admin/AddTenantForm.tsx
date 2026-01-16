@@ -70,9 +70,11 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     setLoading(true);
     const toastId = toast.loading('Cadastrando inquilino...');
 
+    const currentPassword = password; // Salva a senha antes de limpar o estado
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
-      password,
+      password: currentPassword,
       options: {
         data: {
           full_name: fullName,
@@ -89,10 +91,23 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       return;
     }
 
-    // A função do Supabase (trigger) agora cuida de atualizar o apartamento,
-    // incluindo o valor do aluguel e a data de vencimento.
     if (authData.user) {
-      toast.success('Inquilino cadastrado com sucesso!', { id: toastId });
+      // 1. Notifica o n8n via Edge Function
+      try {
+        await supabase.functions.invoke('notify-new-tenant', {
+          body: { 
+            userId: authData.user.id, 
+            apartmentNumber: apartmentNumber,
+            temporaryPassword: currentPassword,
+          },
+        });
+        // Se a notificação falhar, não bloqueamos o usuário, apenas logamos o erro no backend.
+      } catch (error) {
+        console.error('Falha ao notificar n8n:', error);
+      }
+
+      // 2. Sucesso e fechamento do formulário
+      toast.success('Inquilino cadastrado com sucesso! O workflow de boas-vindas foi iniciado.', { id: toastId });
       onSuccess();
     }
     
