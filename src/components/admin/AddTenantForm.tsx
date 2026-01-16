@@ -5,7 +5,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import toast from 'react-hot-toast';
 import { Copy, RefreshCw } from 'lucide-react';
-import SimpleDatePicker from '../ui/SimpleDatePicker'; // Importando o novo componente
+import SimpleDatePicker from '../ui/SimpleDatePicker';
 import { cn, formatPhoneNumber, formatFullName, formatEmail } from '../../lib/utils';
 import {
   Select,
@@ -21,13 +21,16 @@ interface AddTenantFormProps {
   preSelectedApartmentNumber: number | null;
 }
 
+// URL do webhook do n8n fornecida pelo usuário
+const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/ae4721e5-1e74-48cb-9625-ec1e94f89ebb';
+
 const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSuccess, preSelectedApartmentNumber }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [apartmentNumber, setApartmentNumber] = useState<number | ''>(preSelectedApartmentNumber || '');
-  const [moveInDate, setMoveInDate] = useState<Date>(new Date()); // Estado agora é apenas Date
+  const [moveInDate, setMoveInDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -70,8 +73,9 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     setLoading(true);
     const toastId = toast.loading('Cadastrando inquilino...');
 
-    const currentPassword = password; // Salva a senha antes de limpar o estado
+    const currentPassword = password;
 
+    // 1. Criação do usuário no Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password: currentPassword,
@@ -92,21 +96,36 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     }
 
     if (authData.user) {
-      // 1. Notifica o n8n via Edge Function
+      // 2. Aciona o webhook do n8n diretamente do frontend
+      const n8nPayload = {
+        event: 'new_tenant_registered',
+        tenant_id: authData.user.id,
+        apartment_number: apartmentNumber,
+        temporary_password: currentPassword,
+        profile: {
+            id: authData.user.id,
+            full_name: fullName,
+            email: email,
+            phone: phone,
+            apartment_number: apartmentNumber,
+            move_in_date: moveInDate.toISOString(),
+        },
+        timestamp: new Date().toISOString(),
+      };
+
       try {
-        await supabase.functions.invoke('notify-new-tenant', {
-          body: { 
-            userId: authData.user.id, 
-            apartmentNumber: apartmentNumber,
-            temporaryPassword: currentPassword,
-          },
+        await fetch(N8N_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(n8nPayload),
         });
-        // Se a notificação falhar, não bloqueamos o usuário, apenas logamos o erro no backend.
+        // Não verificamos o sucesso do fetch, pois o cadastro já foi feito.
       } catch (error) {
         console.error('Falha ao notificar n8n:', error);
+        // O usuário não precisa saber que a notificação falhou, apenas que o cadastro foi feito.
       }
 
-      // 2. Sucesso e fechamento do formulário
+      // 3. Sucesso e fechamento do formulário
       toast.success('Inquilino cadastrado com sucesso! O workflow de boas-vindas foi iniciado.', { id: toastId });
       onSuccess();
     }
