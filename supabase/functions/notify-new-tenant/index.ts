@@ -32,13 +32,21 @@ serve(async (req) => {
     }
 
     // 1. Busca o perfil completo do novo inquilino
+    // Adicionamos um pequeno atraso para garantir que o trigger do Supabase tenha criado o perfil
+    // antes de tentarmos buscá-lo.
+    await new Promise(resolve => setTimeout(resolve, 1000)); 
+    
     const { data: profileData, error: profileError } = await supabaseAdmin
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-    if (profileError) throw profileError;
+    if (profileError) {
+        // Se o perfil ainda não estiver lá, tentamos novamente ou lançamos um erro
+        console.error('Erro ao buscar perfil após 1s:', profileError);
+        throw new Error('Perfil do inquilino não encontrado após o cadastro.');
+    }
 
     // 2. Prepara o payload para o n8n
     const n8nPayload = {
