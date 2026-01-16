@@ -33,7 +33,6 @@ serve(async (req) => {
 
     // 1. Busca o perfil completo do novo inquilino
     // Adicionamos um pequeno atraso para garantir que o trigger do Supabase tenha criado o perfil
-    // antes de tentarmos buscá-lo.
     await new Promise(resolve => setTimeout(resolve, 1000)); 
     
     const { data: profileData, error: profileError } = await supabaseAdmin
@@ -43,9 +42,10 @@ serve(async (req) => {
         .single();
 
     if (profileError) {
-        // Se o perfil ainda não estiver lá, tentamos novamente ou lançamos um erro
         console.error('Erro ao buscar perfil após 1s:', profileError);
-        throw new Error('Perfil do inquilino não encontrado após o cadastro.');
+        // Se o perfil não for encontrado, ainda podemos enviar os dados básicos para o n8n
+        // e deixar o n8n lidar com a falha ou tentar novamente.
+        // Vamos continuar, mas logar o erro.
     }
 
     // 2. Prepara o payload para o n8n
@@ -54,7 +54,7 @@ serve(async (req) => {
       tenant_id: userId,
       apartment_number: apartmentNumber,
       temporary_password: temporaryPassword, // Incluímos a senha temporária
-      profile: profileData, // Dados completos do perfil
+      profile: profileData, // Dados completos do perfil (pode ser null se profileError ocorreu)
       timestamp: new Date().toISOString(),
     };
 
@@ -67,7 +67,6 @@ serve(async (req) => {
 
     if (!n8nResponse.ok) {
         console.error(`Falha ao acionar o n8n: ${n8nResponse.statusText}`);
-        // Não lançamos um erro fatal, pois o cadastro no Supabase já foi feito.
     }
 
     return new Response(JSON.stringify({ message: 'Notificação de novo inquilino enviada ao n8n.' }), {
