@@ -11,7 +11,8 @@ import toast from 'react-hot-toast';
 import { differenceInDays, startOfDay } from 'date-fns';
 import DocumentUploader from '../../components/tenant/DocumentUploader';
 import TenantMessageDialog from '../../components/tenant/TenantMessageDialog';
-import AnnouncementDisplay from '../../components/tenant/AnnouncementDisplay'; // Importando o novo componente
+import AnnouncementDisplay from '../../components/tenant/AnnouncementDisplay';
+import PaymentHistory from '../../components/tenant/PaymentHistory'; // Importando o novo componente
 
 const TenantDashboardPage: React.FC = () => {
   const { profile } = useAuth();
@@ -262,6 +263,8 @@ const TenantDashboardPage: React.FC = () => {
             </div>
 
             <DocumentUploader />
+
+            <PaymentHistory />
 
           </div>
         </div>

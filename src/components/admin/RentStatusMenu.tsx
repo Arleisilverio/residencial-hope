@@ -55,7 +55,7 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
       .insert({
         type: 'revenue',
         category: 'Receita de Aluguel',
-        description: `Recebimento de Aluguel - Kit ${String(aptNumber).padStart(2, '0')}`,
+        description: `Aluguel Kit ${String(aptNumber).padStart(2, '0')} - Inquilino ID: ${tenantId}`,
         amount: amount,
         transaction_date: new Date().toISOString(),
       });
