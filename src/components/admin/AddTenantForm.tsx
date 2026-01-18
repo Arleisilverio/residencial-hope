@@ -21,8 +21,8 @@ interface AddTenantFormProps {
   preSelectedApartmentNumber: number | null;
 }
 
-// URL do webhook do n8n atualizada
-const N8N_WEBHOOK_URL = 'https://webhook.motoboot.com.br/webhook/teste';
+// URL do webhook do n8n atualizada para o endpoint de teste
+const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/teste';
 
 const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSuccess, preSelectedApartmentNumber }) => {
   const [fullName, setFullName] = useState('');
