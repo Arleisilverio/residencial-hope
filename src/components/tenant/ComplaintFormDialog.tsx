@@ -27,6 +27,8 @@ const categories = [
   { value: 'outros', label: 'Outros' },
 ];
 
+const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/teste';
+
 const ComplaintFormDialog: React.FC<ComplaintFormDialogProps> = ({ isOpen, onClose, onSuccess }) => {
   const { user, profile } = useAuth();
   const [category, setCategory] = useState(categories[0].value);
@@ -50,7 +52,7 @@ const ComplaintFormDialog: React.FC<ComplaintFormDialogProps> = ({ isOpen, onClo
     const toastId = toast.loading('Enviando solicitação...');
 
     try {
-      const { error } = await supabase
+      const { data: complaintData, error } = await supabase
         .from('complaints')
         .insert({
           tenant_id: user.id,
@@ -58,10 +60,31 @@ const ComplaintFormDialog: React.FC<ComplaintFormDialogProps> = ({ isOpen, onClo
           category: category,
           description: description,
           status: 'new', // Status inicial
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         throw error;
+      }
+
+      // Notificar n8n após o sucesso
+      try {
+        const n8nPayload = {
+          event: 'new_repair_request',
+          tenant_name: profile.full_name,
+          apartment_number: profile.apartment_number,
+          category: categories.find(c => c.value === category)?.label || category,
+          description: description,
+          timestamp: new Date().toISOString(),
+        };
+        await fetch(N8N_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(n8nPayload),
+        });
+      } catch (n8nError) {
+        console.error('Falha ao notificar n8n sobre solicitação de reparo:', n8nError);
       }
 
       toast.success('Solicitação de reparo enviada com sucesso!', { id: toastId });
