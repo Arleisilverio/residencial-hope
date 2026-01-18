@@ -117,6 +117,7 @@ const RentListItem: React.FC<RentListItemProps> = ({ apartment, onStatusChange, 
         <RentStatusMenu 
           apartmentNumber={number} 
           tenantId={tenant.id}
+          tenantName={tenant.full_name}
           rentAmount={rentValue}
           currentStatus={currentStatus} 
           onStatusChange={onStatusChange} 

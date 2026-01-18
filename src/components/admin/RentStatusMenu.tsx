@@ -5,9 +5,12 @@ import toast from 'react-hot-toast';
 import { RentStatus } from '../../types';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover';
 
+const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/teste';
+
 interface RentStatusMenuProps {
   apartmentNumber: number;
   tenantId: string;
+  tenantName: string;
   rentAmount: number;
   currentStatus: RentStatus;
   onStatusChange: () => void; // Recarga global
@@ -22,7 +25,7 @@ const statusOptions: { value: RentStatus; label: string; icon: React.ElementType
   { value: 'overdue', label: 'Atrasado', icon: XCircle, color: 'text-red-600 bg-red-100' },
 ];
 
-const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenantId, rentAmount, currentStatus, onStatusChange, onLocalStatusChange, onOpenPartialPayment }) => {
+const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenantId, tenantName, rentAmount, currentStatus, onStatusChange, onLocalStatusChange, onOpenPartialPayment }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -97,9 +100,28 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
 
         if (updateError) throw updateError;
         
-        // Se o status for 'pago', cria a transação de receita
         if (newStatus === 'paid') {
           await createRevenueTransaction(apartmentNumber, rentAmount);
+          
+          // Notificar n8n sobre o pagamento
+          try {
+            const n8nPayload = {
+              event: 'rent_payment_registered',
+              apartment_number: apartmentNumber,
+              tenant_name: tenantName,
+              payment_status: 'Pago',
+              amount_paid: rentAmount,
+              payment_date: new Date().toISOString(),
+              timestamp: new Date().toISOString(),
+            };
+            await fetch(N8N_WEBHOOK_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(n8nPayload),
+            });
+          } catch (n8nError) {
+            console.error('Falha ao notificar n8n sobre pagamento:', n8nError);
+          }
         }
         
         await sendNotification(newStatus, apartmentNumber);
