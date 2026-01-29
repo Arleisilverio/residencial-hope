@@ -7,30 +7,45 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 const LoginPage: React.FC = () => {
-  const { session } = useAuth();
+  const { session, profile, loading } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (session) {
-      navigate('/admin/dashboard');
+    // Só redireciona se a sessão existir e o perfil já estiver carregado
+    if (session && profile && !loading) {
+      if (profile.role === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (profile.role === 'tenant') {
+        navigate('/tenant/dashboard', { replace: true });
+      }
     }
-  }, [session, navigate]);
+  }, [session, profile, loading, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-900">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-slate-800 rounded-lg shadow-md">
-        <div>
-          <h2 className="text-center text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-900 px-4">
+      <div className="w-full max-w-md p-6 sm:p-8 space-y-8 bg-white dark:bg-slate-800 rounded-lg shadow-md">
+        <div className="text-center">
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
             Condomínio Hope
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
             Faça login para acessar o painel
           </p>
         </div>
         <Auth
           supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
+          appearance={{ 
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#2563eb',
+                  brandAccent: '#1d4ed8',
+                }
+              }
+            }
+          }}
           theme={theme}
           providers={[]}
           localization={{
@@ -38,38 +53,17 @@ const LoginPage: React.FC = () => {
               sign_in: {
                 email_label: 'Endereço de e-mail',
                 password_label: 'Sua senha',
-                email_input_placeholder: 'seu.email@exemplo.com',
-                password_input_placeholder: 'Sua senha',
                 button_label: 'Entrar',
                 loading_button_label: 'Entrando...',
-                social_provider_text: 'Entrar com {{provider}}',
                 link_text: 'Não tem uma conta? Cadastre-se',
               },
               sign_up: {
                 email_label: 'Endereço de e-mail',
                 password_label: 'Crie uma senha',
-                email_input_placeholder: 'seu.email@exemplo.com',
-                password_input_placeholder: 'Crie uma senha forte',
                 button_label: 'Cadastrar',
                 loading_button_label: 'Cadastrando...',
                 link_text: 'Já tem uma conta? Entre',
-                confirmation_text: 'Verifique seu e-mail para o link de confirmação',
-              },
-              forgotten_password: {
-                email_label: 'Endereço de e-mail',
-                password_label: 'Sua senha',
-                email_input_placeholder: 'seu.email@exemplo.com',
-                button_label: 'Enviar instruções',
-                loading_button_label: 'Enviando...',
-                link_text: 'Esqueceu sua senha?',
-                confirmation_text: 'Verifique seu e-mail para o link de recuperação',
-              },
-              update_password: {
-                password_label: 'Nova senha',
-                password_input_placeholder: 'Sua nova senha',
-                button_label: 'Atualizar senha',
-                loading_button_label: 'Atualizando...',
-              },
+              }
             },
           }}
         />

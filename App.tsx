@@ -11,26 +11,29 @@ import RoleProtectedRoute from './src/components/auth/RoleProtectedRoute';
 // Componente de Carregamento
 const PageLoader = () => (
   <div className="flex justify-center items-center h-screen bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300">
-    Carregando página...
+    <div className="text-center">
+      <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p>Carregando...</p>
+    </div>
   </div>
 );
 
-// Importação dinâmica (lazy loading) das páginas
+// Importação dinâmica
 const AdminDashboardPage = lazy(() => import('./src/pages/admin/AdminDashboardPage'));
 const TenantDetailPage = lazy(() => import('./src/pages/admin/TenantDetailPage'));
 const FinanceiroPage = lazy(() => import('./src/pages/admin/FinanceiroPage'));
 const AdminDocumentsPage = lazy(() => import('./src/pages/admin/AdminDocumentsPage'));
 const AdminTenantDocumentsPage = lazy(() => import('./src/pages/admin/AdminTenantDocumentsPage'));
 const FinancialDashboardPage = lazy(() => import('./src/pages/admin/FinancialDashboardPage'));
-const AdminLogsPage = lazy(() => import('./src/pages/admin/AdminLogsPage')); // Nova página
+const AdminLogsPage = lazy(() => import('./src/pages/admin/AdminLogsPage'));
 const TenantDashboardPage = lazy(() => import('./src/pages/tenant/TenantDashboardPage'));
 const LoginPage = lazy(() => import('./src/pages/LoginPage'));
 
 function App() {
-  const { profile, loading } = useAuth();
+  const { session, profile, loading } = useAuth();
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300">Carregando autenticação...</div>;
+    return <PageLoader />;
   }
 
   const AdminRoutes = () => (
@@ -49,12 +52,6 @@ function App() {
     </RoleProtectedRoute>
   );
 
-  const initialRedirectPath = profile?.role === 'admin' 
-    ? "/admin/dashboard" 
-    : profile?.role === 'tenant' 
-    ? "/tenant/dashboard" 
-    : "/login";
-
   return (
     <>
       <Toaster position="bottom-right" />
@@ -70,7 +67,7 @@ function App() {
             <Route path="/admin/documents" element={<AdminDocumentsPage />} />
             <Route path="/admin/documents/:tenantId" element={<AdminTenantDocumentsPage />} />
             <Route path="/admin/financial-dashboard" element={<FinancialDashboardPage />} />
-            <Route path="/admin/logs" element={<AdminLogsPage />} /> {/* Nova rota */}
+            <Route path="/admin/logs" element={<AdminLogsPage />} />
           </Route>
 
           {/* Rotas do Inquilino */}
@@ -78,11 +75,24 @@ function App() {
             <Route path="/tenant/dashboard" element={<TenantDashboardPage />} />
           </Route>
 
-          {/* Rota raiz redireciona com base na role */}
+          {/* Redirecionamento Dinâmico Raiz */}
           <Route 
             path="/" 
-            element={<Navigate to={initialRedirectPath} replace />} 
+            element={
+              session ? (
+                profile?.role === 'admin' ? (
+                  <Navigate to="/admin/dashboard" replace />
+                ) : (
+                  <Navigate to="/tenant/dashboard" replace />
+                )
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            } 
           />
+          
+          {/* Fallback para páginas não encontradas */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     </>
