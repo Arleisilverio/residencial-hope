@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { RentStatus } from '../../types';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover';
 
-const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/teste';
+const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
 
 interface RentStatusMenuProps {
   apartmentNumber: number;
@@ -13,9 +13,9 @@ interface RentStatusMenuProps {
   tenantName: string;
   rentAmount: number;
   currentStatus: RentStatus;
-  onStatusChange: () => void; // Recarga global
-  onLocalStatusChange: (newStatus: RentStatus) => void; // Atualização otimista local
-  onOpenPartialPayment: () => void; // Novo prop para abrir o diálogo de pagamento parcial
+  onStatusChange: () => void;
+  onLocalStatusChange: (newStatus: RentStatus) => void;
+  onOpenPartialPayment: () => void;
 }
 
 const statusOptions: { value: RentStatus; label: string; icon: React.ElementType; color: string }[] = [
@@ -38,14 +38,13 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
         tenant_id: tenantId,
         title: `Status do Aluguel - Kit ${String(aptNumber).padStart(2, '0')}`,
         message: `O status do seu aluguel foi alterado para: ${statusLabel}.`,
-        icon: 'DollarSign', // Usamos um ícone genérico para finanças
+        icon: 'DollarSign',
         read: false,
         dismissible: true,
       });
 
     if (error) {
       console.error('Erro ao enviar notificação:', error);
-      toast.error('Falha ao notificar o inquilino.', { icon: <Bell className="w-5 h-5" /> });
     }
   };
 
@@ -62,7 +61,6 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
     
     if (error) {
       console.error('Erro ao criar transação de receita:', error);
-      toast.error('Falha ao registrar a receita no painel financeiro.');
     }
   };
 
@@ -103,7 +101,6 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
         if (newStatus === 'paid') {
           await createRevenueTransaction(apartmentNumber, rentAmount);
           
-          // Notificar n8n sobre o pagamento
           try {
             const n8nPayload = {
               event: 'rent_payment_registered',
@@ -130,7 +127,7 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
         
     } catch (error) {
         console.error('Update error:', error);
-        toast.error(`Erro ao atualizar status: ${error instanceof Error ? error.message : 'Erro desconhecido'}`, { id: toastId });
+        toast.error(`Erro ao atualizar status`, { id: toastId });
     } finally {
         onStatusChange(); 
         setIsUpdating(false);
@@ -146,11 +143,7 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
           className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors disabled:opacity-50 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-700"
           title="Mudar Status do Aluguel"
         >
-          {isUpdating ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <MoreVertical className="w-5 h-5" />
-          )}
+          {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : <MoreVertical className="w-5 h-5" />}
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-48 p-0 z-50 border bg-popover text-popover-foreground">
@@ -173,7 +166,6 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
               >
                 <span className={`w-3 h-3 rounded-full mr-3 ${circleColor}`}></span>
                 {option.label}
-                {isSelected && <CheckCircle className="w-4 h-4 ml-auto text-blue-600" />}
               </button>
             );
           })}

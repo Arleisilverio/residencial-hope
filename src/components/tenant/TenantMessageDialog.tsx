@@ -13,7 +13,7 @@ interface TenantMessageDialogProps {
   onSuccess: () => void;
 }
 
-const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/teste';
+const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
 
 const TenantMessageDialog: React.FC<TenantMessageDialogProps> = ({ isOpen, onClose, onSuccess }) => {
   const { user, profile } = useAuth();
@@ -24,7 +24,7 @@ const TenantMessageDialog: React.FC<TenantMessageDialogProps> = ({ isOpen, onClo
     e.preventDefault();
 
     if (!user || !profile || !profile.apartment_number) {
-      toast.error('Erro de autenticação ou apartamento não definido.');
+      toast.error('Erro de autenticação.');
       return;
     }
     if (description.trim().length === 0) {
@@ -41,14 +41,13 @@ const TenantMessageDialog: React.FC<TenantMessageDialogProps> = ({ isOpen, onClo
         .insert({
           tenant_id: user.id,
           apartment_number: profile.apartment_number,
-          category: 'message', // Categoria especial para mensagens
+          category: 'message',
           description: description,
           status: 'new',
         });
 
       if (error) throw error;
 
-      // Notificar n8n após o sucesso
       try {
         const n8nPayload = {
           event: 'new_tenant_message',
@@ -63,7 +62,7 @@ const TenantMessageDialog: React.FC<TenantMessageDialogProps> = ({ isOpen, onClo
           body: JSON.stringify(n8nPayload),
         });
       } catch (n8nError) {
-        console.error('Falha ao notificar n8n sobre nova mensagem:', n8nError);
+        console.error('Falha ao notificar n8n sobre mensagem:', n8nError);
       }
 
       toast.success('Mensagem enviada com sucesso!', { id: toastId });
@@ -73,7 +72,7 @@ const TenantMessageDialog: React.FC<TenantMessageDialogProps> = ({ isOpen, onClo
 
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
-      toast.error('Falha ao enviar a mensagem. Tente novamente.', { id: toastId });
+      toast.error('Falha ao enviar a mensagem.', { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -93,7 +92,6 @@ const TenantMessageDialog: React.FC<TenantMessageDialogProps> = ({ isOpen, onClo
             required
           />
         </div>
-
         <div className="flex justify-end pt-4">
           <Button type="submit" disabled={loading}>
             <MessageSquare className="w-4 h-4 mr-2" />

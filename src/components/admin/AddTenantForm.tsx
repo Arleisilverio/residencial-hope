@@ -21,8 +21,8 @@ interface AddTenantFormProps {
   preSelectedApartmentNumber: number | null;
 }
 
-// URL do webhook do n8n
-const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/teste';
+// URL do webhook do n8n atualizada
+const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
 
 const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSuccess, preSelectedApartmentNumber }) => {
   const [fullName, setFullName] = useState('');
@@ -150,6 +150,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
         </p>
       </div>
 
+      {/* Resto do formulário... */}
       <div>
         <label htmlFor="fullName" className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
         <Input id="fullName" type="text" value={fullName} onChange={(e) => setFullName(formatFullName(e.target.value))} placeholder="Ex: João da Silva" required />

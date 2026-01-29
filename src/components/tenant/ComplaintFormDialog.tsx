@@ -27,7 +27,7 @@ const categories = [
   { value: 'outros', label: 'Outros' },
 ];
 
-const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/teste';
+const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
 
 const ComplaintFormDialog: React.FC<ComplaintFormDialogProps> = ({ isOpen, onClose, onSuccess }) => {
   const { user, profile } = useAuth();
@@ -52,23 +52,18 @@ const ComplaintFormDialog: React.FC<ComplaintFormDialogProps> = ({ isOpen, onClo
     const toastId = toast.loading('Enviando solicitação...');
 
     try {
-      const { data: complaintData, error } = await supabase
+      const { error } = await supabase
         .from('complaints')
         .insert({
           tenant_id: user.id,
           apartment_number: profile.apartment_number,
           category: category,
           description: description,
-          status: 'new', // Status inicial
-        })
-        .select()
-        .single();
+          status: 'new',
+        });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      // Notificar n8n após o sucesso
       try {
         const n8nPayload = {
           event: 'new_repair_request',
@@ -84,18 +79,17 @@ const ComplaintFormDialog: React.FC<ComplaintFormDialogProps> = ({ isOpen, onClo
           body: JSON.stringify(n8nPayload),
         });
       } catch (n8nError) {
-        console.error('Falha ao notificar n8n sobre solicitação de reparo:', n8nError);
+        console.error('Falha ao notificar n8n sobre reparo:', n8nError);
       }
 
-      toast.success('Solicitação de reparo enviada com sucesso!', { id: toastId });
+      toast.success('Solicitação de reparo enviada!', { id: toastId });
       setDescription('');
-      setCategory(categories[0].value);
       onSuccess();
       onClose();
 
     } catch (error) {
       console.error('Erro ao enviar reclamação:', error);
-      toast.error('Falha ao enviar a solicitação. Tente novamente.', { id: toastId });
+      toast.error('Falha ao enviar a solicitação.', { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -119,7 +113,6 @@ const ComplaintFormDialog: React.FC<ComplaintFormDialogProps> = ({ isOpen, onClo
             </SelectContent>
           </Select>
         </div>
-        
         <div>
           <label htmlFor="description" className="text-sm font-medium text-slate-700 dark:text-slate-300">Descrição Breve (máx. 160 caracteres)</label>
           <Textarea
@@ -131,11 +124,7 @@ const ComplaintFormDialog: React.FC<ComplaintFormDialogProps> = ({ isOpen, onClo
             placeholder="Ex: O chuveiro do banheiro parou de esquentar."
             required
           />
-          <p className="text-xs text-right text-slate-500 dark:text-slate-400 mt-1">
-            {description.length} / 160
-          </p>
         </div>
-
         <div className="flex justify-end pt-4">
           <Button type="submit" disabled={loading}>
             <Wrench className="w-4 h-4 mr-2" />
