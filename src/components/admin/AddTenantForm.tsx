@@ -83,7 +83,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
         options: {
           data: {
             full_name: fullName,
-            phone: phone,
+            phone: phone, // Mantém o formato visual no banco de dados para leitura humana
             apartment_number: apartmentNumber,
             move_in_date: moveInDate.toISOString(),
           },
@@ -101,6 +101,12 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
           icon: 'Info',
         });
 
+        // --- LÓGICA DE FORMATAÇÃO PARA EVOLUTION API ---
+        // Remove tudo que não é número
+        const digitsOnly = phone.replace(/\D/g, '');
+        // Garante o prefixo 55 (Brasil) se não estiver presente
+        const rawPhone = digitsOnly.startsWith('55') ? digitsOnly : `55${digitsOnly}`;
+
         // 3. Webhook n8n
         const n8nPayload = {
           event: 'new_tenant_registered',
@@ -110,7 +116,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
           profile: {
               full_name: fullName,
               email: email,
-              phone: phone,
+              phone: rawPhone, // AGORA CHEGA COMO 5541987922057
           }
         };
 
