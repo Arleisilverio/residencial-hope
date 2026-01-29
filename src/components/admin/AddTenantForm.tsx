@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
+import { logToApp } from '../../services/logger'; // Importando o logger
 import { Apartment } from '../../types';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -21,7 +22,6 @@ interface AddTenantFormProps {
   preSelectedApartmentNumber: number | null;
 }
 
-// URL do webhook do n8n atualizada
 const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
 
 const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSuccess, preSelectedApartmentNumber }) => {
@@ -75,68 +75,73 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
 
     const currentPassword = password;
 
-    // 1. Criação do usuário no Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password: currentPassword,
-      options: {
-        data: {
-          full_name: fullName,
-          phone: phone,
-          apartment_number: apartmentNumber,
-          move_in_date: moveInDate.toISOString(),
-        },
-      },
-    });
-
-    if (authError) {
-      toast.error(`Erro ao criar usuário: ${authError.message}`, { id: toastId });
-      setLoading(false);
-      return;
-    }
-
-    if (authData.user) {
-      // 2. Criar notificação interna de boas-vindas no app
-      await supabase.from('notifications').insert({
-        tenant_id: authData.user.id,
-        title: 'Bem-vindo ao Condomínio Hope! 🎉',
-        message: `Olá ${fullName.split(' ')[0]}, seu acesso ao Kit ${String(apartmentNumber).padStart(2, '0')} foi liberado. Explore o painel para ver seus documentos e pagamentos.`,
-        icon: 'Info',
-      });
-
-      // 3. Aciona o webhook do n8n para o WhatsApp
-      const n8nPayload = {
-        event: 'new_tenant_registered',
-        tenant_id: authData.user.id,
-        apartment_number: apartmentNumber,
-        temporary_password: currentPassword,
-        profile: {
-            id: authData.user.id,
+    try {
+      // 1. Criação do usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password: currentPassword,
+        options: {
+          data: {
             full_name: fullName,
-            email: email,
             phone: phone,
             apartment_number: apartmentNumber,
             move_in_date: moveInDate.toISOString(),
+          },
         },
-        timestamp: new Date().toISOString(),
-      };
+      });
 
-      try {
-        await fetch(N8N_WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(n8nPayload),
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // 2. Criar notificação interna
+        await supabase.from('notifications').insert({
+          tenant_id: authData.user.id,
+          title: 'Bem-vindo ao Condomínio Hope! 🎉',
+          message: `Olá ${fullName.split(' ')[0]}, seu acesso ao Kit ${String(apartmentNumber).padStart(2, '0')} foi liberado.`,
+          icon: 'Info',
         });
-      } catch (error) {
-        console.error('Falha ao notificar n8n:', error);
-      }
 
-      // 4. Sucesso total
-      toast.success('Inquilino cadastrado! Workflow de boas-vindas iniciado.', { id: toastId, duration: 5000 });
-      onSuccess();
+        // 3. Webhook n8n
+        const n8nPayload = {
+          event: 'new_tenant_registered',
+          tenant_id: authData.user.id,
+          apartment_number: apartmentNumber,
+          temporary_password: currentPassword,
+          profile: {
+              full_name: fullName,
+              email: email,
+              phone: phone,
+          }
+        };
+
+        logToApp('info', 'AddTenantForm', `Iniciando disparo do webhook para ${email}`, n8nPayload);
+
+        try {
+          const response = await fetch(N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(n8nPayload),
+          });
+
+          if (response.ok) {
+            logToApp('info', 'Webhook', 'Webhook de boas-vindas enviado com sucesso!', { status: response.status });
+          } else {
+            const errorText = await response.text();
+            logToApp('error', 'Webhook', `Webhook retornou erro ${response.status}`, { error: errorText });
+          }
+        } catch (error) {
+          logToApp('error', 'Webhook', 'Erro de rede ao tentar contactar o n8n.', { error: error instanceof Error ? error.message : error });
+        }
+
+        toast.success('Inquilino cadastrado!', { id: toastId });
+        onSuccess();
+      }
+    } catch (error) {
+      logToApp('error', 'AddTenantForm', 'Falha crítica no cadastro de inquilino.', error);
+      toast.error(`Erro: ${error instanceof Error ? error.message : 'Falha desconhecida'}`, { id: toastId });
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const isApartmentSelectionDisabled = !!preSelectedApartmentNumber;
@@ -150,7 +155,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
         </p>
       </div>
 
-      {/* Resto do formulário... */}
       <div>
         <label htmlFor="fullName" className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
         <Input id="fullName" type="text" value={fullName} onChange={(e) => setFullName(formatFullName(e.target.value))} placeholder="Ex: João da Silva" required />

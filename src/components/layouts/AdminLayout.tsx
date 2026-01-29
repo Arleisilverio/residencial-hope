@@ -1,12 +1,12 @@
 import React, { ReactNode, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogOut, DollarSign, FolderOpen, BarChart2 } from 'lucide-react';
+import { LogOut, DollarSign, FolderOpen, BarChart2, Terminal } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeToggleButton from '../common/ThemeToggleButton';
 import PaymentRequestBell from '../admin/PaymentRequestBell';
 import RepairNotificationIcon from '../admin/RepairNotificationIcon';
-import ImageViewerDialog from '../common/ImageViewerDialog'; // Importando o visualizador
+import ImageViewerDialog from '../common/ImageViewerDialog';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -15,7 +15,7 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
-  const [isLogoViewerOpen, setIsLogoViewerOpen] = useState(false); // Novo estado
+  const [isLogoViewerOpen, setIsLogoViewerOpen] = useState(false);
 
   const handleLogout = async () => {
     const toastId = toast.loading('Saindo...');
@@ -33,7 +33,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <header className="bg-white dark:bg-slate-800 shadow-sm dark:shadow-black/20 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
             <div className="flex-shrink-0">
               <button onClick={() => setIsLogoViewerOpen(true)} title="Visualizar Logo">
                 <img 
@@ -44,15 +43,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               </button>
             </div>
             
-            {/* Ícones de Ação */}
             <div className="flex items-center space-x-1 sm:space-x-2">
-              {/* Ícone de Notificação de Reparos (Ferramenta) */}
               <RepairNotificationIcon />
-
-              {/* Sino de Notificação de Pagamento */}
               <PaymentRequestBell />
 
-              {/* Botão de Gerenciamento de Documentos */}
               <Link
                 to="/admin/documents"
                 className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
@@ -61,7 +55,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <FolderOpen className="w-5 h-5" />
               </Link>
 
-              {/* Botão de Gerenciamento Financeiro (Aluguéis) */}
               <Link
                 to="/admin/financeiro"
                 className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
@@ -70,7 +63,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <DollarSign className="w-5 h-5" />
               </Link>
 
-              {/* Botão de Receitas e Despesas */}
               <Link
                 to="/admin/financial-dashboard"
                 className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
@@ -78,11 +70,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               >
                 <BarChart2 className="w-5 h-5" />
               </Link>
+
+              {/* Novo ícone de Logs */}
+              <Link
+                to="/admin/logs"
+                className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                title="Logs do Sistema"
+              >
+                <Terminal className="w-5 h-5" />
+              </Link>
               
-              {/* Botão de Tema */}
               <ThemeToggleButton />
 
-              {/* Botão de Sair */}
               <button
                 onClick={handleLogout}
                 className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
@@ -98,7 +97,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         {children}
       </main>
       
-      {/* Visualizador de Imagem da Logo */}
       <ImageViewerDialog
         isOpen={isLogoViewerOpen}
         onClose={() => setIsLogoViewerOpen(false)}
