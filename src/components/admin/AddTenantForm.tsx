@@ -4,7 +4,7 @@ import { Apartment } from '../../types';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import toast from 'react-hot-toast';
-import { Copy, RefreshCw } from 'lucide-react';
+import { Copy, RefreshCw, Send } from 'lucide-react';
 import SimpleDatePicker from '../ui/SimpleDatePicker';
 import { cn, formatPhoneNumber, formatFullName, formatEmail } from '../../lib/utils';
 import {
@@ -21,7 +21,7 @@ interface AddTenantFormProps {
   preSelectedApartmentNumber: number | null;
 }
 
-// URL do webhook do n8n atualizada
+// URL do webhook do n8n
 const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/teste';
 
 const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSuccess, preSelectedApartmentNumber }) => {
@@ -71,7 +71,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     }
 
     setLoading(true);
-    const toastId = toast.loading('Cadastrando inquilino...');
+    const toastId = toast.loading('Cadastrando inquilino e preparando boas-vindas...');
 
     const currentPassword = password;
 
@@ -96,7 +96,15 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     }
 
     if (authData.user) {
-      // 2. Aciona o webhook do n8n diretamente do frontend
+      // 2. Criar notificação interna de boas-vindas no app
+      await supabase.from('notifications').insert({
+        tenant_id: authData.user.id,
+        title: 'Bem-vindo ao Condomínio Hope! 🎉',
+        message: `Olá ${fullName.split(' ')[0]}, seu acesso ao Kit ${String(apartmentNumber).padStart(2, '0')} foi liberado. Explore o painel para ver seus documentos e pagamentos.`,
+        icon: 'Info',
+      });
+
+      // 3. Aciona o webhook do n8n para o WhatsApp
       const n8nPayload = {
         event: 'new_tenant_registered',
         tenant_id: authData.user.id,
@@ -119,14 +127,12 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(n8nPayload),
         });
-        // Não verificamos o sucesso do fetch, pois o cadastro já foi feito.
       } catch (error) {
         console.error('Falha ao notificar n8n:', error);
-        // O usuário não precisa saber que a notificação falhou, apenas que o cadastro foi feito.
       }
 
-      // 3. Sucesso e fechamento do formulário
-      toast.success('Inquilino cadastrado com sucesso! O workflow de boas-vindas foi iniciado.', { id: toastId });
+      // 4. Sucesso total
+      toast.success('Inquilino cadastrado! Workflow de boas-vindas iniciado.', { id: toastId, duration: 5000 });
       onSuccess();
     }
     
@@ -137,6 +143,13 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-200 dark:border-blue-800 mb-4">
+        <p className="text-xs text-blue-700 dark:text-blue-300 flex items-center">
+          <Send className="w-3 h-3 mr-2" />
+          Uma mensagem de boas-vindas será enviada automaticamente após salvar.
+        </p>
+      </div>
+
       <div>
         <label htmlFor="fullName" className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
         <Input id="fullName" type="text" value={fullName} onChange={(e) => setFullName(formatFullName(e.target.value))} placeholder="Ex: João da Silva" required />
@@ -195,9 +208,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
               )}
             </SelectContent>
           </Select>
-          {isApartmentSelectionDisabled && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Apartamento pré-selecionado.</p>
-          )}
         </div>
         <div>
           <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1">Data de Entrada</label>
@@ -206,7 +216,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       </div>
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={loading}>
-          {loading ? 'Salvando...' : 'Salvar Inquilino'}
+          {loading ? 'Salvando...' : 'Salvar e Enviar Boas-vindas'}
         </Button>
       </div>
     </form>
