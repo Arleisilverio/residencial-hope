@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { RentStatus } from '../../types';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover';
 
-const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
+const N8N_WEBHOOK_URL = 'https://webhook.motoboot.com.br/webhook/boas-vindas';
 
 interface RentStatusMenuProps {
   apartmentNumber: number;

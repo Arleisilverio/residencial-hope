@@ -22,7 +22,7 @@ interface AddTenantFormProps {
   preSelectedApartmentNumber: number | null;
 }
 
-const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
+const N8N_WEBHOOK_URL = 'https://webhook.motoboot.com.br/webhook/boas-vindas';
 
 const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSuccess, preSelectedApartmentNumber }) => {
   const [fullName, setFullName] = useState('');
