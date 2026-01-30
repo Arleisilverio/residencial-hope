@@ -12,7 +12,8 @@ import { differenceInDays, startOfDay } from 'date-fns';
 import DocumentUploader from '../../components/tenant/DocumentUploader';
 import TenantMessageDialog from '../../components/tenant/TenantMessageDialog';
 import AnnouncementDisplay from '../../components/tenant/AnnouncementDisplay';
-import PaymentHistory from '../../components/tenant/PaymentHistory'; // Importando o novo componente
+import PaymentHistory from '../../components/tenant/PaymentHistory'; 
+import RepairHistory from '../../components/tenant/RepairHistory'; // Novo componente
 
 const TenantDashboardPage: React.FC = () => {
   const { profile } = useAuth();
@@ -20,8 +21,6 @@ const TenantDashboardPage: React.FC = () => {
   const [loadingApartment, setLoadingApartment] = useState(true);
   const [isComplaintDialogOpen, setIsComplaintDialogOpen] = useState(false);
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
-  const [isDueDateAlertVisible, setIsDueDateAlertVisible] = useState(true);
-  const [daysUntilDue, setDaysUntilDue] = useState<number | null>(null);
   const [isRequestingPayment, setIsRequestingPayment] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -46,105 +45,34 @@ const TenantDashboardPage: React.FC = () => {
   }, [profile]);
 
   useEffect(() => {
-    if (apartment?.next_due_date && apartment.rent_status !== 'paid') {
-      const today = startOfDay(new Date());
-      const dueDate = startOfDay(new Date(apartment.next_due_date));
-      const diff = differenceInDays(dueDate, today);
-      
-      if (diff >= 0 && diff <= 5) {
-        setDaysUntilDue(diff);
-      } else {
-        setDaysUntilDue(null);
-      }
-    } else {
-      setDaysUntilDue(null);
-    }
-  }, [apartment]);
+    fetchApartmentDetails();
+  }, [fetchApartmentDetails]);
 
   const handleRequestPayment = async () => {
     if (!profile || !apartment) {
       toast.error('Erro: Dados do apartamento não carregados.');
       return;
     }
-    if (apartment.payment_request_pending) {
-        toast('Você já enviou uma solicitação de pagamento. Aguarde a confirmação do administrador.', { icon: '⏳' });
-        return;
-    }
-
     setIsRequestingPayment(true);
-    setApartment(prev => prev ? { ...prev, payment_request_pending: true } : null);
     const toastId = toast.loading('Enviando solicitação de pagamento...');
-
     try {
         const { error } = await supabase.functions.invoke('request-payment', {
             body: { apartmentNumber: apartment.number },
         });
-
         if (error) throw error;
-
         toast.success('Solicitação de pagamento enviada ao administrador!', { id: toastId });
     } catch (error) {
-        console.error('Error requesting payment:', error);
-        toast.error('Falha ao enviar a solicitação de pagamento.', { id: toastId });
-        setApartment(prev => prev ? { ...prev, payment_request_pending: false } : null);
+        toast.error('Falha ao enviar a solicitação.', { id: toastId });
     } finally {
         setIsRequestingPayment(false);
     }
   };
 
-  useEffect(() => {
-    fetchApartmentDetails();
-  }, [fetchApartmentDetails]);
-
-  useEffect(() => {
-    if (!profile?.apartment_number) return;
-
-    const channel = supabase
-      .channel(`apartment_${profile.apartment_number}_changes`)
-      .on(
-        'postgres_changes',
-        { 
-          event: 'UPDATE', 
-          schema: 'public', 
-          table: 'apartments',
-          filter: `number=eq.${profile.apartment_number}`
-        },
-        (payload) => {
-          setApartment({ ...payload.new, rent_status: payload.new.rent_status || 'pending' } as Apartment);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [profile?.apartment_number]);
-
-  const formatCurrency = (value: number | null | undefined) => {
-    if (value === null || value === undefined) return 'Não informado';
-    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
-
-  const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return 'Não informado';
-    return new Date(dateString).toLocaleDateString('pt-BR');
-  };
-
-  const getDueDateMessage = (days: number | null) => {
-    if (days === null) return '';
-    if (days === 0) return 'Seu aluguel vence hoje! Realize o pagamento para evitar atrasos.';
-    if (days === 1) return 'Seu aluguel vence amanhã.';
-    return `Lembrete: seu aluguel vence em ${days} dias.`;
-  };
-
-  if (!profile) {
-    return <div className="p-8 text-center text-slate-600 dark:text-slate-400">Carregando perfil...</div>;
-  }
+  if (!profile) return <div className="p-8 text-center">Carregando perfil...</div>;
 
   return (
     <>
       <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-        
         <AnnouncementDisplay />
 
         <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-8">
@@ -152,134 +80,49 @@ const TenantDashboardPage: React.FC = () => {
         </h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
               <div className="flex justify-between items-center mb-6 border-b dark:border-slate-700 pb-3">
                 <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200">Meu Perfil</h2>
                 <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => setIsMessageDialogOpen(true)}
-                    className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-full transition-colors"
-                    title="Enviar Mensagem para Administração"
-                  >
-                    <MessageSquare className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setIsComplaintDialogOpen(true)} 
-                    className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-full transition-colors"
-                    title="Solicitar Reparo / Manutenção"
-                  >
-                    <Wrench className="w-5 h-5" />
-                  </button>
+                  <button onClick={() => setIsMessageDialogOpen(true)} className="p-2 text-blue-600 rounded-full hover:bg-blue-100"><MessageSquare className="w-5 h-5" /></button>
+                  <button onClick={() => setIsComplaintDialogOpen(true)} className="p-2 text-blue-600 rounded-full hover:bg-blue-100"><Wrench className="w-5 h-5" /></button>
                 </div>
               </div>
-              
               <AvatarUploader profile={profile} />
-
               <div className="text-center mb-6">
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{profile.full_name}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400 capitalize">{profile.role}</p>
-              </div>
-
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center text-slate-700 dark:text-slate-300 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-md">
-                  <Mail className="w-4 h-4 mr-3 text-slate-500 dark:text-slate-400" />
-                  <span>{profile.email || 'Email não informado'}</span>
-                </div>
-                <div className="flex items-center text-slate-700 dark:text-slate-300 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-md">
-                  <Phone className="w-4 h-4 mr-3 text-slate-500 dark:text-slate-400" />
-                  <span>{profile.phone || 'Telefone não informado'}</span>
-                </div>
-                <div className="flex items-center text-slate-700 dark:text-slate-300 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-md">
-                  <Calendar className="w-4 h-4 mr-3 text-slate-500 dark:text-slate-400" />
-                  <span>Entrada: {formatDate(profile.move_in_date)}</span>
-                </div>
+                <p className="text-2xl font-bold">{profile.full_name}</p>
+                <p className="text-sm text-slate-500 capitalize">Kit {profile.apartment_number}</p>
               </div>
             </div>
+            <RepairHistory /> {/* Adicionado Histórico de Reparos */}
           </div>
 
           <div className="lg:col-span-2 space-y-6">
-            
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
-              <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center border-b dark:border-slate-700 pb-3">
-                <Home className="w-5 h-5 mr-2 text-slate-500 dark:text-slate-400" />
-                Detalhes da Unidade
-              </h2>
-              
+              <h2 className="text-xl font-semibold mb-4 flex items-center border-b dark:border-slate-700 pb-3"><Home className="w-5 h-5 mr-2" /> Unidade</h2>
               <div className="grid grid-cols-2 gap-4">
                   <div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Número do Kit</p>
-                      <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                          {String(profile.apartment_number || 'N/A').padStart(2, '0')}
-                      </p>
+                      <p className="text-sm text-slate-500">Número</p>
+                      <p className="text-3xl font-bold">Kit {String(profile.apartment_number).padStart(2, '0')}</p>
                   </div>
                   <div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Aluguel Mensal</p>
-                      {loadingApartment ? (
-                          <p className="text-lg text-slate-500 dark:text-slate-400">Carregando...</p>
-                      ) : (
-                          <div className="flex items-center text-xl font-bold text-green-700 dark:text-green-400">
-                              <DollarSign className="w-5 h-5 mr-2" />
-                              <span>{formatCurrency(apartment?.monthly_rent)}</span>
-                          </div>
-                      )}
+                      <p className="text-sm text-slate-500">Aluguel</p>
+                      <p className="text-xl font-bold text-green-700">{apartment?.monthly_rent?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                   </div>
               </div>
-              
-              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Status do Pagamento</p>
-                  {loadingApartment ? (
-                      <p className="text-slate-500 dark:text-slate-400">Verificando...</p>
-                  ) : (
-                      <StatusBadge status={apartment?.rent_status || 'pending'} />
-                  )}
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
-                  <Button 
-                    onClick={handleRequestPayment} 
-                    disabled={loadingApartment || apartment?.payment_request_pending || isRequestingPayment}
-                    className="w-full"
-                  >
-                    {isRequestingPayment ? (
-                        <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Enviando...
-                        </>
-                    ) : apartment?.payment_request_pending ? (
-                        <>
-                            <Bell className="w-4 h-4 mr-2 animate-pulse" />
-                            Solicitação Enviada
-                        </>
-                    ) : (
-                        <>
-                            <DollarSign className="w-4 h-4 mr-2" />
-                            Pagar Aluguel
-                        </>
-                    )}
-                  </Button>
-              </div>
+              <Button onClick={handleRequestPayment} className="w-full mt-6" disabled={apartment?.payment_request_pending}>
+                {apartment?.payment_request_pending ? 'Solicitação Pendente' : 'Pagar Aluguel'}
+              </Button>
             </div>
-
             <DocumentUploader />
-
             <PaymentHistory />
-
           </div>
         </div>
       </div>
       
-      <ComplaintFormDialog 
-        isOpen={isComplaintDialogOpen}
-        onClose={() => setIsComplaintDialogOpen(false)}
-        onSuccess={() => { /* Nenhuma ação de recarga necessária aqui */ }}
-      />
-      <TenantMessageDialog
-        isOpen={isMessageDialogOpen}
-        onClose={() => setIsMessageDialogOpen(false)}
-        onSuccess={() => setRefreshTrigger(prev => prev + 1)}
-      />
+      <ComplaintFormDialog isOpen={isComplaintDialogOpen} onClose={() => setIsComplaintDialogOpen(false)} onSuccess={() => setRefreshTrigger(t => t + 1)} />
+      <TenantMessageDialog isOpen={isMessageDialogOpen} onClose={() => setIsMessageDialogOpen(false)} onSuccess={() => setRefreshTrigger(t => t + 1)} />
     </>
   );
 };
