@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
-import { logToApp } from '../../services/logger'; // Importando o logger
+import { logToApp } from '../../services/logger';
 import { Apartment } from '../../types';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import toast from 'react-hot-toast';
 import { Copy, RefreshCw, Send } from 'lucide-react';
 import SimpleDatePicker from '../ui/SimpleDatePicker';
-import { cn, formatPhoneNumber, formatFullName, formatEmail } from '../../lib/utils';
+import { cn, formatPhoneNumber, cleanPhoneNumber, formatFullName, formatEmail } from '../../lib/utils';
 import {
   Select,
   SelectContent,
@@ -71,19 +71,18 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     }
 
     setLoading(true);
-    const toastId = toast.loading('Cadastrando inquilino e preparando boas-vindas...');
+    const toastId = toast.loading('Cadastrando inquilino...');
 
-    const currentPassword = password;
+    const rawPhone = cleanPhoneNumber(phone);
 
     try {
-      // 1. Criação do usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
-        password: currentPassword,
+        password: password,
         options: {
           data: {
             full_name: fullName,
-            phone: phone, // Mantém o formato visual no banco de dados para leitura humana
+            phone: rawPhone,
             apartment_number: apartmentNumber,
             move_in_date: moveInDate.toISOString(),
           },
@@ -93,7 +92,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       if (authError) throw authError;
 
       if (authData.user) {
-        // 2. Criar notificação interna
         await supabase.from('notifications').insert({
           tenant_id: authData.user.id,
           title: 'Bem-vindo ao Condomínio Hope! 🎉',
@@ -101,94 +99,61 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
           icon: 'Info',
         });
 
-        // --- LÓGICA DE FORMATAÇÃO PARA EVOLUTION API ---
-        // Remove tudo que não é número
-        const digitsOnly = phone.replace(/\D/g, '');
-        // Garante o prefixo 55 (Brasil) se não estiver presente
-        const rawPhone = digitsOnly.startsWith('55') ? digitsOnly : `55${digitsOnly}`;
-
-        // 3. Webhook n8n
         const n8nPayload = {
           event: 'new_tenant_registered',
           tenant_id: authData.user.id,
           apartment_number: apartmentNumber,
-          temporary_password: currentPassword,
+          temporary_password: password,
           profile: {
               full_name: fullName,
               email: email,
-              phone: rawPhone, // AGORA CHEGA COMO 5541987922057
+              phone: rawPhone,
           }
         };
 
-        logToApp('info', 'AddTenantForm', `Iniciando disparo do webhook para ${email}`, n8nPayload);
-
         try {
-          const response = await fetch(N8N_WEBHOOK_URL, {
+          await fetch(N8N_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(n8nPayload),
           });
-
-          if (response.ok) {
-            logToApp('info', 'Webhook', 'Webhook de boas-vindas enviado com sucesso!', { status: response.status });
-          } else {
-            const errorText = await response.text();
-            logToApp('error', 'Webhook', `Webhook retornou erro ${response.status}`, { error: errorText });
-          }
         } catch (error) {
-          logToApp('error', 'Webhook', 'Erro de rede ao tentar contactar o n8n.', { error: error instanceof Error ? error.message : error });
+          console.error('Erro ao notificar n8n:', error);
         }
 
         toast.success('Inquilino cadastrado!', { id: toastId });
         onSuccess();
       }
     } catch (error) {
-      logToApp('error', 'AddTenantForm', 'Falha crítica no cadastro de inquilino.', error);
       toast.error(`Erro: ${error instanceof Error ? error.message : 'Falha desconhecida'}`, { id: toastId });
     } finally {
       setLoading(false);
     }
   };
 
-  const isApartmentSelectionDisabled = !!preSelectedApartmentNumber;
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-200 dark:border-blue-800 mb-4">
-        <p className="text-xs text-blue-700 dark:text-blue-300 flex items-center">
-          <Send className="w-3 h-3 mr-2" />
-          Uma mensagem de boas-vindas será enviada automaticamente após salvar.
-        </p>
-      </div>
-
       <div>
         <label htmlFor="fullName" className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
-        <Input id="fullName" type="text" value={fullName} onChange={(e) => setFullName(formatFullName(e.target.value))} placeholder="Ex: João da Silva" required />
+        <Input id="fullName" value={fullName} onChange={(e) => setFullName(formatFullName(e.target.value))} placeholder="Ex: João da Silva" required />
       </div>
       <div>
         <label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
-        <Input id="email" type="email" value={email} onChange={(e) => setEmail(formatEmail(e.target.value))} placeholder="Ex: joao.silva@email.com" required />
+        <Input id="email" type="email" value={email} onChange={(e) => setEmail(formatEmail(e.target.value))} placeholder="Ex: joao@email.com" required />
       </div>
       <div>
         <label htmlFor="phone" className="text-sm font-medium text-slate-700 dark:text-slate-300">Telefone</label>
-        <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(formatPhoneNumber(e.target.value))} maxLength={15} placeholder="Ex: (11) 98765-4321" required />
+        <Input id="phone" value={phone} onChange={(e) => setPhone(formatPhoneNumber(e.target.value))} maxLength={15} placeholder="(41) 98765-4321" required />
       </div>
       <div>
         <label htmlFor="tempPassword" className="text-sm font-medium text-slate-700 dark:text-slate-300">Senha Provisória</label>
         <div className="relative flex items-center">
-          <Input
-            id="tempPassword"
-            type="text"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="pr-20"
-          />
+          <Input id="tempPassword" value={password} onChange={(e) => setPassword(e.target.value)} required className="pr-20" />
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-2">
-            <button type="button" onClick={handleRegeneratePassword} title="Gerar nova senha" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-100">
+            <button type="button" onClick={handleRegeneratePassword} className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-100">
               <RefreshCw className="w-4 h-4" />
             </button>
-            <button type="button" onClick={handleCopyPassword} title="Copiar senha" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-100">
+            <button type="button" onClick={handleCopyPassword} className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-100">
               <Copy className="w-4 h-4" />
             </button>
           </div>
@@ -201,7 +166,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
             value={apartmentNumber ? String(apartmentNumber) : ''}
             onValueChange={(value) => setApartmentNumber(Number(value))}
             required
-            disabled={isApartmentSelectionDisabled}
+            disabled={!!preSelectedApartmentNumber}
           >
             <SelectTrigger id="apartmentNumber" className="w-full">
               <SelectValue placeholder="Selecione..." />
@@ -212,11 +177,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
                   Kit {String(apt.number).padStart(2, '0')}
                 </SelectItem>
               ))}
-              {isApartmentSelectionDisabled && !availableApartments.find(apt => apt.number === preSelectedApartmentNumber) && preSelectedApartmentNumber && (
-                  <SelectItem key={preSelectedApartmentNumber} value={String(preSelectedApartmentNumber)}>
-                      Kit {String(preSelectedApartmentNumber).padStart(2, '0')} (Selecionado)
-                  </SelectItem>
-              )}
             </SelectContent>
           </Select>
         </div>
@@ -227,7 +187,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       </div>
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={loading}>
-          {loading ? 'Salvando...' : 'Salvar e Enviar Boas-vindas'}
+          {loading ? 'Salvando...' : 'Salvar Inquilino'}
         </Button>
       </div>
     </form>
