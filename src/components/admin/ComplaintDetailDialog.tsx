@@ -1,10 +1,17 @@
 import React from 'react';
 import { Dialog } from '../ui/Dialog';
 import { Button } from '../ui/Button';
-import { ComplaintNotification } from './RepairNotificationIcon';
-import { Wrench, Calendar, User, Home, MessageSquare, Send, Trash2, CheckCircle } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Wrench, User, Home, MessageSquare, Send, Trash2, CheckCircle } from 'lucide-react';
+
+export interface ComplaintNotification {
+  id: string;
+  apartment_number: number;
+  category: string;
+  description: string;
+  tenant_id: string;
+  tenant_name: string;
+  status: 'new' | 'in_progress' | 'resolved';
+}
 
 interface ComplaintDetailDialogProps {
   isOpen: boolean;
@@ -92,7 +99,6 @@ const ComplaintDetailDialog: React.FC<ComplaintDetailDialogProps> = ({
             variant="outline" 
             className="flex-1 border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
             onClick={() => {
-                // Aqui podemos apenas remover a notificação tratando como resolvida
                 onDelete(complaint.id, complaint.apartment_number);
                 onClose();
             }}
