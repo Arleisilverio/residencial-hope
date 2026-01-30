@@ -1,7 +1,7 @@
 import React, { ReactNode, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogOut, DollarSign, FolderOpen, BarChart2, Terminal } from 'lucide-react';
+import { LogOut, DollarSign, FolderOpen, BarChart2, Terminal, Wrench } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeToggleButton from '../common/ThemeToggleButton';
 import PaymentRequestBell from '../admin/PaymentRequestBell';
@@ -48,6 +48,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <PaymentRequestBell />
 
               <Link
+                to="/admin/manutencao"
+                className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                title="Central de Manutenção"
+              >
+                <Wrench className="w-5 h-5" />
+              </Link>
+
+              <Link
                 to="/admin/documents"
                 className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
                 title="Documentos dos Inquilinos"
@@ -71,7 +79,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <BarChart2 className="w-5 h-5" />
               </Link>
 
-              {/* Novo ícone de Logs */}
               <Link
                 to="/admin/logs"
                 className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
