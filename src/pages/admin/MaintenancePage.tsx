@@ -30,14 +30,13 @@ const MaintenancePage: React.FC = () => {
 
   const fetchComplaints = useCallback(async () => {
     setLoading(true);
-    // Filtrando para excluir a categoria 'message' desta página
     const { data, error } = await supabase
       .from('complaints')
       .select(`id, apartment_number, category, description, status, tenant_id, tenant:profiles(full_name)`)
       .neq('category', 'message')
       .order('created_at', { ascending: false });
 
-    if (!error) {
+    if (!error && data) {
       const formattedData: ComplaintNotification[] = data.map(c => ({
         id: c.id,
         apartment_number: c.apartment_number,
@@ -48,6 +47,11 @@ const MaintenancePage: React.FC = () => {
         tenant_name: (c.tenant as any)?.full_name || 'Inquilino Desconhecido',
       }));
       setComplaints(formattedData);
+
+      // Marca o ID da mais recente como "visto" para limpar o badge do sino
+      if (formattedData.length > 0) {
+        localStorage.setItem('last_seen_maintenance_id', formattedData[0].id);
+      }
     }
     setLoading(false);
   }, []);

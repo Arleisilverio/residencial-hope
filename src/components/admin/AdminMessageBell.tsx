@@ -29,7 +29,7 @@ const AdminMessageBell: React.FC = () => {
       .eq('status', 'new')
       .order('created_at', { ascending: false });
 
-    if (!error) {
+    if (!error && data) {
       const formattedData: MessageNotification[] = data.map(m => ({
         id: m.id,
         apartment_number: m.apartment_number,
@@ -46,7 +46,7 @@ const AdminMessageBell: React.FC = () => {
   useEffect(() => {
     fetchMessages();
     const channel = supabase
-      .channel('admin-messages')
+      .channel('admin-messages-bell')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'complaints', filter: "category=eq.message" }, () => {
           fetchMessages();
       })
