@@ -1,19 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Apartment, RentStatus } from '../../types';
+import { Apartment } from '../../types';
 import { supabase } from '../../services/supabase';
-import { DollarSign, Home, Mail, Phone, Calendar, Wrench, Bell, CalendarClock, X, Loader2, MessageSquare } from 'lucide-react';
+import { DollarSign, Home, Calendar, Wrench, Loader2, MessageSquare, AlertCircle, CheckCircle2 } from 'lucide-react';
 import AvatarUploader from '../../components/tenant/AvatarUploader';
 import StatusBadge from '../../components/common/StatusBadge'; 
 import { Button } from '../../components/ui/Button';
 import ComplaintFormDialog from '../../components/tenant/ComplaintFormDialog'; 
 import toast from 'react-hot-toast';
-import { differenceInDays, startOfDay } from 'date-fns';
 import DocumentUploader from '../../components/tenant/DocumentUploader';
 import TenantMessageDialog from '../../components/tenant/TenantMessageDialog';
 import AnnouncementDisplay from '../../components/tenant/AnnouncementDisplay';
 import PaymentHistory from '../../components/tenant/PaymentHistory'; 
-import RepairHistory from '../../components/tenant/RepairHistory'; // Novo componente
+import RepairHistory from '../../components/tenant/RepairHistory';
 
 const TenantDashboardPage: React.FC = () => {
   const { profile } = useAuth();
@@ -68,6 +67,15 @@ const TenantDashboardPage: React.FC = () => {
     }
   };
 
+  const formatCurrency = (value: number | null | undefined) => {
+    return (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
   if (!profile) return <div className="p-8 text-center">Carregando perfil...</div>;
 
   return (
@@ -80,41 +88,90 @@ const TenantDashboardPage: React.FC = () => {
         </h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
+          {/* Coluna Lateral: Perfil e Reparos */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
               <div className="flex justify-between items-center mb-6 border-b dark:border-slate-700 pb-3">
                 <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200">Meu Perfil</h2>
                 <div className="flex items-center space-x-1">
-                  <button onClick={() => setIsMessageDialogOpen(true)} className="p-2 text-blue-600 rounded-full hover:bg-blue-100"><MessageSquare className="w-5 h-5" /></button>
-                  <button onClick={() => setIsComplaintDialogOpen(true)} className="p-2 text-blue-600 rounded-full hover:bg-blue-100"><Wrench className="w-5 h-5" /></button>
+                  <button onClick={() => setIsMessageDialogOpen(true)} className="p-2 text-blue-600 rounded-full hover:bg-blue-100 transition-colors" title="Enviar Mensagem">
+                    <MessageSquare className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => setIsComplaintDialogOpen(true)} className="p-2 text-blue-600 rounded-full hover:bg-blue-100 transition-colors" title="Solicitar Reparo">
+                    <Wrench className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
               <AvatarUploader profile={profile} />
-              <div className="text-center mb-6">
-                <p className="text-2xl font-bold">{profile.full_name}</p>
-                <p className="text-sm text-slate-500 capitalize">Kit {profile.apartment_number}</p>
+              <div className="text-center mt-4">
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{profile.full_name}</p>
+                <p className="text-sm text-slate-500 font-medium">Kit {String(profile.apartment_number).padStart(2, '0')}</p>
               </div>
             </div>
-            <RepairHistory /> {/* Adicionado Histórico de Reparos */}
+            <RepairHistory />
           </div>
 
+          {/* Coluna Principal: Financeiro e Documentos */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
-              <h2 className="text-xl font-semibold mb-4 flex items-center border-b dark:border-slate-700 pb-3"><Home className="w-5 h-5 mr-2" /> Unidade</h2>
-              <div className="grid grid-cols-2 gap-4">
-                  <div>
-                      <p className="text-sm text-slate-500">Número</p>
-                      <p className="text-3xl font-bold">Kit {String(profile.apartment_number).padStart(2, '0')}</p>
-                  </div>
-                  <div>
-                      <p className="text-sm text-slate-500">Aluguel</p>
-                      <p className="text-xl font-bold text-green-700">{apartment?.monthly_rent?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                  </div>
+            {/* Card Financeiro Detalhado */}
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+              <div className="flex justify-between items-center mb-6 border-b dark:border-slate-700 pb-3">
+                <h2 className="text-xl font-semibold flex items-center text-slate-800 dark:text-slate-200">
+                  <DollarSign className="w-5 h-5 mr-2 text-green-600" /> 
+                  Situação Financeira Atual
+                </h2>
+                {apartment && <StatusBadge status={apartment.rent_status} />}
               </div>
-              <Button onClick={handleRequestPayment} className="w-full mt-6" disabled={apartment?.payment_request_pending}>
-                {apartment?.payment_request_pending ? 'Solicitação Pendente' : 'Pagar Aluguel'}
-              </Button>
+
+              {loadingApartment ? (
+                <div className="flex justify-center py-8"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border dark:border-slate-700">
+                      <p className="text-xs text-slate-500 uppercase font-bold mb-1">Aluguel Mensal</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{formatCurrency(apartment?.monthly_rent)}</p>
+                      <div className="mt-2 flex items-center text-xs text-slate-500">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        Próximo Vencimento: {formatDate(apartment?.next_due_date)}
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border dark:border-slate-700">
+                      <p className="text-xs text-slate-500 uppercase font-bold mb-1">Saldo Devedor</p>
+                      <p className={`text-2xl font-bold ${apartment?.rent_status === 'paid' ? 'text-green-600' : 'text-red-600'}`}>
+                        {apartment?.rent_status === 'paid' ? formatCurrency(0) : formatCurrency(apartment?.remaining_balance || apartment?.monthly_rent)}
+                      </p>
+                      <div className="mt-2 flex items-center text-xs text-slate-500">
+                        <CheckCircle2 className="w-3 h-3 mr-1 text-green-500" />
+                        Já pago este mês: {formatCurrency(apartment?.amount_paid)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {apartment?.rent_status !== 'paid' && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg flex items-start">
+                      <AlertCircle className="w-5 h-5 text-blue-600 mr-3 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">Solicitação de Pagamento</p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                          Ao clicar no botão abaixo, o administrador será notificado para enviar o comprovante ou chave PIX.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <Button 
+                    onClick={handleRequestPayment} 
+                    className="w-full h-12 text-lg font-bold shadow-md" 
+                    disabled={apartment?.rent_status === 'paid' || apartment?.payment_request_pending}
+                  >
+                    {apartment?.rent_status === 'paid' ? 'Aluguel Quitado!' : (apartment?.payment_request_pending ? 'Solicitação em Análise...' : 'Informar Pagamento')}
+                  </Button>
+                </div>
+              )}
             </div>
+
             <DocumentUploader />
             <PaymentHistory />
           </div>
