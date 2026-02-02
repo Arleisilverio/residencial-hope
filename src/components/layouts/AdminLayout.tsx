@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import ThemeToggleButton from '../common/ThemeToggleButton';
 import PaymentRequestBell from '../admin/PaymentRequestBell';
 import MaintenanceBadge from '../admin/MaintenanceBadge';
+import AdminMessageBell from '../admin/AdminMessageBell'; // Novo componente
 import ImageViewerDialog from '../common/ImageViewerDialog';
 
 interface AdminLayoutProps {
@@ -44,6 +45,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             </div>
             
             <div className="flex items-center space-x-1 sm:space-x-2">
+              <AdminMessageBell />
               <MaintenanceBadge />
               <PaymentRequestBell />
 

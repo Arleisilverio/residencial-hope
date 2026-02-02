@@ -7,10 +7,12 @@ const MaintenanceBadge: React.FC = () => {
   const [count, setCount] = useState(0);
 
   const fetchCount = useCallback(async () => {
+    // Agora filtramos para NÃO contar categorias de 'message'
     const { count: newCount, error } = await supabase
       .from('complaints')
       .select('*', { count: 'exact', head: true })
-      .eq('status', 'new');
+      .eq('status', 'new')
+      .neq('category', 'message');
 
     if (!error) {
       setCount(newCount || 0);
@@ -42,7 +44,7 @@ const MaintenanceBadge: React.FC = () => {
     <Link
       to="/admin/manutencao"
       className="relative p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
-      title="Central de Manutenção"
+      title="Central de Manutenção (Reparos)"
     >
       <Wrench className={`w-5 h-5 ${hasNotifications ? 'text-blue-600 dark:text-blue-400' : ''}`} />
       {hasNotifications && (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../services/supabase';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Wrench, Loader2, Search, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Wrench, Loader2, Search, AlertCircle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import toast from 'react-hot-toast';
 import ComplaintDetailDialog, { ComplaintNotification } from '../../components/admin/ComplaintDetailDialog';
@@ -13,7 +13,6 @@ const categoryMap: { [key: string]: string } = {
     estrutura: 'Estrutura',
     outros: 'Outros',
     reparo: 'Manutenção IA',
-    message: 'Mensagem',
 };
 
 const statusLabels = {
@@ -31,9 +30,11 @@ const MaintenancePage: React.FC = () => {
 
   const fetchComplaints = useCallback(async () => {
     setLoading(true);
+    // Filtrando para excluir a categoria 'message' desta página
     const { data, error } = await supabase
       .from('complaints')
       .select(`id, apartment_number, category, description, status, tenant_id, tenant:profiles(full_name)`)
+      .neq('category', 'message')
       .order('created_at', { ascending: false });
 
     if (!error) {
@@ -146,7 +147,7 @@ const MaintenancePage: React.FC = () => {
       <AdminReplyDialog
         isOpen={!!replyingTo}
         onClose={() => setReplyingTo(null)}
-        onSuccess={() => { /* Notificações enviadas via reply dialog */ }}
+        onSuccess={() => { /* Sucesso via callback original */ }}
         tenant={replyingTo ? { id: replyingTo.tenant_id, name: replyingTo.tenant_name } : null}
       />
     </div>
