@@ -25,7 +25,6 @@ const categoryMap: { [key: string]: string } = {
   estrutura: 'Estrutura',
   outros: 'Outros',
   reparo: 'Manutenção IA',
-  message: 'Mensagem',
 };
 
 const RepairHistory: React.FC = () => {
@@ -40,6 +39,7 @@ const RepairHistory: React.FC = () => {
       .from('complaints')
       .select('*')
       .eq('tenant_id', user.id)
+      .neq('category', 'message') // Garante que mensagens não apareçam aqui
       .order('created_at', { ascending: false });
 
     if (!error) {
@@ -51,7 +51,6 @@ const RepairHistory: React.FC = () => {
   useEffect(() => {
     fetchRepairs();
     
-    // Escuta mudanças (status atualizado pelo admin)
     const channel = supabase
       .channel('tenant-repairs')
       .on('postgres_changes', { 
