@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
-import { logToApp } from '../../services/logger';
 import { Apartment } from '../../types';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import toast from 'react-hot-toast';
-import { Copy, RefreshCw, Send } from 'lucide-react';
+import { Copy, RefreshCw } from 'lucide-react';
 import SimpleDatePicker from '../ui/SimpleDatePicker';
-import { cn, formatPhoneNumber, cleanPhoneNumber, formatFullName, formatEmail } from '../../lib/utils';
+import { formatPhoneNumber, cleanPhoneNumber, formatFullName, formatEmail } from '../../lib/utils';
 import {
   Select,
   SelectContent,
@@ -22,6 +21,7 @@ interface AddTenantFormProps {
   preSelectedApartmentNumber: number | null;
 }
 
+// URL de TESTE do n8n
 const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
 
 const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSuccess, preSelectedApartmentNumber }) => {
@@ -71,11 +71,12 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     }
 
     setLoading(true);
-    const toastId = toast.loading('Cadastrando inquilino...');
+    const toastId = toast.loading('Cadastrando e notificando...');
 
     const rawPhone = cleanPhoneNumber(phone);
 
     try {
+      // 1. Cria o usuário no Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password: password,
@@ -92,33 +93,25 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       if (authError) throw authError;
 
       if (authData.user) {
-        // Envio para o n8n
-        const n8nPayload = {
-          event: 'new_tenant_registered',
-          tenant_id: authData.user.id,
-          apartment_number: apartmentNumber,
-          temporary_password: password,
-          full_name: fullName,
-          email: email,
-          phone: rawPhone,
-          move_in_date: moveInDate.toISOString(),
-          timestamp: new Date().toISOString()
-        };
+        // 2. Chama a Edge Function para enviar ao n8n (Evita erro de CORS)
+        await supabase.functions.invoke('notify-n8n', {
+          body: { 
+            url: N8N_WEBHOOK_URL,
+            payload: {
+              event: 'new_tenant_registered',
+              tenant_id: authData.user.id,
+              apartment_number: apartmentNumber,
+              temporary_password: password,
+              full_name: fullName,
+              email: email,
+              phone: rawPhone,
+              move_in_date: moveInDate.toISOString(),
+              timestamp: new Date().toISOString()
+            }
+          },
+        });
 
-        console.log('[n8n-debug] Enviando carga útil:', n8nPayload);
-
-        try {
-          await fetch(N8N_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(n8nPayload),
-          });
-          console.log('[n8n-debug] Sucesso ao chamar webhook');
-        } catch (webhookError) {
-          console.error('[n8n-debug] Erro ao notificar n8n:', webhookError);
-        }
-
-        // Notificação interna no sistema
+        // 3. Notificação interna
         await supabase.from('notifications').insert({
           tenant_id: authData.user.id,
           title: 'Bem-vindo ao Condomínio Hope! 🎉',
@@ -126,10 +119,11 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
           icon: 'Info',
         });
 
-        toast.success('Inquilino cadastrado e n8n notificado!', { id: toastId });
+        toast.success('Inquilino cadastrado com sucesso!', { id: toastId });
         onSuccess();
       }
     } catch (error) {
+      console.error('Error in AddTenantForm:', error);
       toast.error(`Erro: ${error instanceof Error ? error.message : 'Falha desconhecida'}`, { id: toastId });
     } finally {
       setLoading(false);
