@@ -92,6 +92,34 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       if (authError) throw authError;
 
       if (authData.user) {
+        // Envio para o n8n
+        const n8nPayload = {
+          event: 'new_tenant_registered',
+          tenant_id: authData.user.id,
+          apartment_number: apartmentNumber,
+          temporary_password: password,
+          full_name: fullName,
+          email: email,
+          phone: rawPhone,
+          move_in_date: moveInDate.toISOString(),
+          timestamp: new Date().toISOString()
+        };
+
+        console.log('[n8n-debug] Enviando carga útil:', n8nPayload);
+
+        try {
+          // Usamos await para garantir que o envio comece antes de fechar o modal
+          await fetch(N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(n8nPayload),
+          });
+          console.log('[n8n-debug] Sucesso ao chamar webhook');
+        } catch (webhookError) {
+          console.error('[n8n-debug] Erro ao notificar n8n:', webhookError);
+        }
+
+        // Notificação interna no sistema
         await supabase.from('notifications').insert({
           tenant_id: authData.user.id,
           title: 'Bem-vindo ao Condomínio Hope! 🎉',
@@ -99,29 +127,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
           icon: 'Info',
         });
 
-        const n8nPayload = {
-          event: 'new_tenant_registered',
-          tenant_id: authData.user.id,
-          apartment_number: apartmentNumber,
-          temporary_password: password,
-          profile: {
-              full_name: fullName,
-              email: email,
-              phone: rawPhone,
-          }
-        };
-
-        try {
-          await fetch(N8N_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(n8nPayload),
-          });
-        } catch (error) {
-          console.error('Erro ao notificar n8n:', error);
-        }
-
-        toast.success('Inquilino cadastrado!', { id: toastId });
+        toast.success('Inquilino cadastrado e n8n notificado!', { id: toastId });
         onSuccess();
       }
     } catch (error) {
