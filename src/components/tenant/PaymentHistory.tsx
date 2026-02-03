@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { Loader2, History, CheckCircle, DollarSign, XCircle, Clock, Download, FileText } from 'lucide-react';
+import { Loader2, History, CheckCircle, Download, FileText } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -14,8 +14,6 @@ interface PaymentRecord {
   description: string;
 }
 
-const N8N_REPORT_WEBHOOK = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
-
 const PaymentHistory: React.FC = () => {
   const { user, profile } = useAuth();
   const [history, setHistory] = useState<PaymentRecord[]>([]);
@@ -25,7 +23,6 @@ const PaymentHistory: React.FC = () => {
     if (!user) return;
     setLoading(true);
 
-    // Buscamos transações de receita que contenham o ID do usuário na descrição
     const { data, error } = await supabase
       .from('transactions')
       .select('id, amount, transaction_date, description')
@@ -42,7 +39,7 @@ const PaymentHistory: React.FC = () => {
         amount: item.amount,
         payment_date: item.transaction_date,
         status: 'paid' as const,
-        description: item.description.split(' - ')[0], // Remove o ID da descrição para exibir
+        description: item.description.split(' - ')[0],
       }));
       setHistory(formattedHistory);
     }
@@ -75,31 +72,10 @@ const PaymentHistory: React.FC = () => {
     toast.success('Lista baixada com sucesso!');
   };
 
-  const requestFormalReport = async () => {
-    const toastId = toast.loading('Solicitando relatório ao sistema...');
-    try {
-      await fetch(N8N_REPORT_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          event: 'formal_report_request',
-          tenant_id: user?.id,
-          tenant_name: profile?.full_name,
-          apartment: profile?.apartment_number,
-          timestamp: new Date().toISOString()
-        }),
-      });
-      toast.success('Solicitação enviada! Você receberá o relatório em breve.', { id: toastId });
-    } catch (e) {
-      toast.error('Erro ao solicitar relatório.', { id: toastId });
-    }
-  };
-
   const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
-  // Lógica de 3 meses (aprox 90 dias)
   const daysInContract = profile?.move_in_date 
     ? differenceInDays(new Date(), new Date(profile.move_in_date)) 
     : 0;
@@ -113,15 +89,6 @@ const PaymentHistory: React.FC = () => {
           Histórico de Pagamentos
         </h2>
         <div className="flex space-x-2">
-            {canRequestReport && (
-                <button 
-                    onClick={requestFormalReport}
-                    className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-colors"
-                    title="Baixar Relatório Formal (PDF)"
-                >
-                    <FileText className="w-5 h-5" />
-                </button>
-            )}
             <button 
                 onClick={downloadCSV}
                 disabled={history.length === 0}

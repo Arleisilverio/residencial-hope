@@ -13,8 +13,6 @@ interface TenantMessageDialogProps {
   onSuccess: () => void;
 }
 
-const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
-
 const TenantMessageDialog: React.FC<TenantMessageDialogProps> = ({ isOpen, onClose, onSuccess }) => {
   const { user, profile } = useAuth();
   const [description, setDescription] = useState('');
@@ -47,23 +45,6 @@ const TenantMessageDialog: React.FC<TenantMessageDialogProps> = ({ isOpen, onClo
         });
 
       if (error) throw error;
-
-      try {
-        const n8nPayload = {
-          event: 'new_tenant_message',
-          tenant_name: profile.full_name,
-          apartment_number: profile.apartment_number,
-          message: description,
-          timestamp: new Date().toISOString(),
-        };
-        await fetch(N8N_WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(n8nPayload),
-        });
-      } catch (n8nError) {
-        console.error('Falha ao notificar n8n sobre mensagem:', n8nError);
-      }
 
       toast.success('Mensagem enviada com sucesso!', { id: toastId });
       setDescription('');

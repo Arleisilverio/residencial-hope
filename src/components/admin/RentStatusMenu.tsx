@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { MoreVertical, CheckCircle, Clock, XCircle, Loader2, DollarSign, Bell } from 'lucide-react';
+import { MoreVertical, CheckCircle, Clock, XCircle, Loader2, DollarSign } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 import toast from 'react-hot-toast';
 import { RentStatus } from '../../types';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover';
-
-const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
 
 interface RentStatusMenuProps {
   apartmentNumber: number;
@@ -30,7 +28,6 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleUpdateStatus = async (newStatus: RentStatus) => {
-    // Fecha o menu imediatamente ao clicar
     setIsMenuOpen(false);
 
     if (newStatus === currentStatus) return;
@@ -61,27 +58,10 @@ const RentStatusMenu: React.FC<RentStatusMenuProps> = ({ apartmentNumber, tenant
           await supabase.from('transactions').insert({
             type: 'revenue',
             category: 'Receita de Aluguel',
-            description: `Aluguel Kit ${String(apartmentNumber).padStart(2, '0')} - Inquilino ID: ${tenantId}`,
+            description: `Aluguel Kit ${String(apartmentNumber).padStart(2, '0')} - Inquilino: ${tenantName}`,
             amount: rentAmount,
             transaction_date: new Date().toISOString(),
           });
-          
-          try {
-            await fetch(N8N_WEBHOOK_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                event: 'rent_payment_registered',
-                apartment_number: apartmentNumber,
-                tenant_name: tenantName,
-                payment_status: 'Pago',
-                amount_paid: rentAmount,
-                timestamp: new Date().toISOString(),
-              }),
-            });
-          } catch (n8nError) {
-            console.error('Falha ao notificar n8n:', n8nError);
-          }
         }
         
         toast.success(`Status do Kit ${String(apartmentNumber).padStart(2, '0')} atualizado!`, { id: toastId });

@@ -21,8 +21,8 @@ interface AddTenantFormProps {
   preSelectedApartmentNumber: number | null;
 }
 
-// URL de TESTE do n8n
-const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
+// Webhook de TESTE para o Agente de Onboarding
+const N8N_ONBOARDING_WEBHOOK = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
 
 const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSuccess, preSelectedApartmentNumber }) => {
   const [fullName, setFullName] = useState('');
@@ -71,12 +71,12 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
     }
 
     setLoading(true);
-    const toastId = toast.loading('Cadastrando e notificando...');
+    const toastId = toast.loading('Cadastrando inquilino...');
 
     const rawPhone = cleanPhoneNumber(phone);
 
     try {
-      // 1. Cria o usuário no Auth
+      // 1. Cria o usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password: password,
@@ -93,38 +93,29 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       if (authError) throw authError;
 
       if (authData.user) {
-        // 2. Chama a Edge Function para enviar ao n8n (Evita erro de CORS)
+        // 2. Envia os dados para o Agente no n8n via Edge Function
         await supabase.functions.invoke('notify-n8n', {
           body: { 
-            url: N8N_WEBHOOK_URL,
+            url: N8N_ONBOARDING_WEBHOOK,
             payload: {
-              event: 'new_tenant_registered',
-              tenant_id: authData.user.id,
-              apartment_number: apartmentNumber,
-              temporary_password: password,
+              event: 'new_tenant_onboarding',
               full_name: fullName,
               email: email,
               phone: rawPhone,
+              apartment: apartmentNumber,
+              temporary_password: password,
               move_in_date: moveInDate.toISOString(),
               timestamp: new Date().toISOString()
             }
           },
         });
 
-        // 3. Notificação interna
-        await supabase.from('notifications').insert({
-          tenant_id: authData.user.id,
-          title: 'Bem-vindo ao Condomínio Hope! 🎉',
-          message: `Olá ${fullName.split(' ')[0]}, seu acesso ao Kit ${String(apartmentNumber).padStart(2, '0')} foi liberado.`,
-          icon: 'Info',
-        });
-
-        toast.success('Inquilino cadastrado com sucesso!', { id: toastId });
+        toast.success('Inquilino cadastrado e agente notificado!', { id: toastId });
         onSuccess();
       }
     } catch (error) {
       console.error('Error in AddTenantForm:', error);
-      toast.error(`Erro: ${error instanceof Error ? error.message : 'Falha desconhecida'}`, { id: toastId });
+      toast.error(`Erro: ${error instanceof Error ? error.message : 'Falha ao processar'}`, { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -141,7 +132,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
         <Input id="email" type="email" value={email} onChange={(e) => setEmail(formatEmail(e.target.value))} placeholder="Ex: joao@email.com" required />
       </div>
       <div>
-        <label htmlFor="phone" className="text-sm font-medium text-slate-700 dark:text-slate-300">Telefone</label>
+        <label htmlFor="phone" className="text-sm font-medium text-slate-700 dark:text-slate-300">Telefone (WhatsApp)</label>
         <Input id="phone" value={phone} onChange={(e) => setPhone(formatPhoneNumber(e.target.value))} maxLength={15} placeholder="(41) 98765-4321" required />
       </div>
       <div>
@@ -186,7 +177,7 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
       </div>
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={loading}>
-          {loading ? 'Salvando...' : 'Salvar Inquilino'}
+          {loading ? 'Processando...' : 'Cadastrar Inquilino'}
         </Button>
       </div>
     </form>
