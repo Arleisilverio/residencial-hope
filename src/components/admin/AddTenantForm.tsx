@@ -22,7 +22,7 @@ interface AddTenantFormProps {
   preSelectedApartmentNumber: number | null;
 }
 
-const N8N_WEBHOOK_URL = 'https://webhook.motoboot.com.br/webhook/boas-vindas';
+const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
 
 const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSuccess, preSelectedApartmentNumber }) => {
   const [fullName, setFullName] = useState('');
@@ -108,7 +108,6 @@ const AddTenantForm: React.FC<AddTenantFormProps> = ({ availableApartments, onSu
         console.log('[n8n-debug] Enviando carga útil:', n8nPayload);
 
         try {
-          // Usamos await para garantir que o envio comece antes de fechar o modal
           await fetch(N8N_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

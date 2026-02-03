@@ -13,7 +13,7 @@ interface TenantMessageDialogProps {
   onSuccess: () => void;
 }
 
-const N8N_WEBHOOK_URL = 'https://webhook.motoboot.com.br/webhook/boas-vindas';
+const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
 
 const TenantMessageDialog: React.FC<TenantMessageDialogProps> = ({ isOpen, onClose, onSuccess }) => {
   const { user, profile } = useAuth();

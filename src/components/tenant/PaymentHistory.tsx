@@ -14,7 +14,7 @@ interface PaymentRecord {
   description: string;
 }
 
-const N8N_REPORT_WEBHOOK = 'https://webhook.motoboot.com.br/webhook/boas-vindas';
+const N8N_REPORT_WEBHOOK = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
 
 const PaymentHistory: React.FC = () => {
   const { user, profile } = useAuth();

@@ -27,7 +27,7 @@ const categories = [
   { value: 'outros', label: 'Outros' },
 ];
 
-const N8N_WEBHOOK_URL = 'https://webhook.motoboot.com.br/webhook/boas-vindas';
+const N8N_WEBHOOK_URL = 'https://n8n.motoboot.com.br/webhook-test/boas-vindas';
 
 const ComplaintFormDialog: React.FC<ComplaintFormDialogProps> = ({ isOpen, onClose, onSuccess }) => {
   const { user, profile } = useAuth();
